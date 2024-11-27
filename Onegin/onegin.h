@@ -8,6 +8,6 @@ char** ReadBufferFromFile (const char* const file, size_t* bufSize);
 int    strtoi             (const char* const str);
 void   BufferDtor         (char** buffer);
 
-#define FREE(ptr) free(ptr); ptr = NULL;
+#define FREE(ptr) free(ptr); ptr = nullptr;
 
 #endif

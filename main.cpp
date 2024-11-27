@@ -2,6 +2,7 @@
 #include "Tree/Tree.h"
 #include "Differentiator/Differentiator.h"
 #include "Differentiator/DiffDump.h"
+#include "Onegin/onegin.h"
 
 
 int main()
@@ -9,25 +10,20 @@ int main()
     const char* const inputFile = "test.txt";
     Tree_t tree = {};
 
-    TREE_ASSERT(TreeCtor(&tree, inputFile));
+    size_t bufSize = 0;
+    char** buffer = ReadBufferFromFile(inputFile, &bufSize);
 
-    // GRAPHIC_DUMP(&tree);
+    TREE_ASSERT(TreeCtor(&tree, buffer, bufSize));
 
-    Node_t* root = tree.root;
     GRAPHIC_DUMP(tree.root);
 
-
-    DIFF_ASSERT(Diff(&tree.root));
-
-    PrintPrefTree(&tree);
-
-    printf("\n");
+    TREE_ASSERT(Diff(&tree));
 
     PrintInfixTree(&tree);
 
     GRAPHIC_DUMP(tree.root);
 
-    TREE_ASSERT(TreeDtor(&tree));
+    TREE_ASSERT(TreeDtor(&tree, buffer));
 
     return 0;
 }

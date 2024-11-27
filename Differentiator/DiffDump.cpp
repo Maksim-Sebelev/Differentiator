@@ -218,6 +218,12 @@ static const char* GetTypeColor(const Node_t* node)
             break;
         }
 
+        case NodeArgType::function:
+        {
+            return "#168237";
+            break;
+        }
+
         case NodeArgType::undefined:
         {
             return "red";
