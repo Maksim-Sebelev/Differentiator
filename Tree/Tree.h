@@ -22,6 +22,8 @@ enum TreeErrorType
     VAR_HAS_INCORRECT_CHILD_QUANT,
     FUNC_HAS_INCORRECT_CHILD_QUANT,
     UNDEFINED_NODE_TYPE,
+    UNDEFINED_OPERATION_TYPE,
+    UNDEFINED_FUNCTION_TYPE,
     INCORRECT_TREE_SIZE,
 };
 
@@ -61,13 +63,17 @@ enum Function
     arccos,
     arctg,
     arcctg,
+    sh,
+    ch,
+    th,
+    cth,
     undefined_function
 };
 
 struct TreeElem_t
 {
     NodeArgType type;
-    char*        arg;
+    const char* arg;
 };
 
 
@@ -87,12 +93,12 @@ struct Tree_t
 };
 
 
-TreeErr TreeCtor         (Tree_t*  tree, char** buffer, size_t bufSize);
-TreeErr TreeDtor         (Tree_t*  root, char** buffer);
-TreeErr NodeCtor         (Node_t** node, const NodeArgType type, char* arg,  Node_t* left, Node_t* right);
+TreeErr TreeCtor         (Tree_t*  tree, const char** buffer, size_t bufSize);
+TreeErr TreeDtor         (Tree_t*  root, const char** buffer);
+TreeErr NodeCtor         (Node_t** node, NodeArgType type, const char* arg, Node_t* left, Node_t* right);
 TreeErr NodeDtor         (Node_t** node);
 TreeErr NodeCopy         (Node_t** copy, const Node_t* node);
-TreeErr SetNode          (Node_t** node, NodeArgType type, char* arg, Node_t* left, Node_t* right);
+TreeErr SetNode          (Node_t** node, NodeArgType type, const char* arg, Node_t* left, Node_t* right);
 
 TreeErr TreeVerif         (const Tree_t* tree, TreeErr* Err, const char* file, const int line, const char* func);
 TreeErr NodeVerif         (const Node_t* node, TreeErr* err, const char* file, const int line, const char* func);
@@ -100,7 +106,7 @@ TreeErr NodeVerif         (const Node_t* node, TreeErr* err, const char* file, c
 Operation GetOperationType     (const char* operation);
 Function  GetFunctionType      (const char* function);
 
-void          PrintInfixTree   (const Tree_t* tree);
+void PrintInfixTree   (const Tree_t* tree);
 
 #define TREE_VERIF(TreePtr, Err) TreeVerif(TreePtr, &Err, __FILE__, __LINE__, __func__)
 

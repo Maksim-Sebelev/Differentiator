@@ -8,12 +8,13 @@ static const char* GetTypeColor   (const Node_t* node);
 
 static void DotBegin              (FILE* dotFile);
 static void DotEnd                (FILE* dotFile);
-static void DotBeginSubGraph1     (FILE* dotFile);
-static void DotBeginSubGraph2     (FILE* dotFile);
+// static void DotBeginSubGraph1     (FILE* dotFile);
+// static void DotBeginSubGraph2     (FILE* dotFile);
 
 static void DotCreateAllNodes     (FILE* dotFile, const Node_t* node);
 static void DotCreateEdges        (FILE* dotFile, const Node_t* node);
 static void DotCreateEdgesHelper  (FILE* dotFile, const Node_t* node);
+
 static void DotCreateDumpPlace    (FILE* dotFile, const char* file, const int line, const char* func);
 
 static void GraphicDumpHelper     (const Node_t* node, const char* dotFileName, const char* file, const int line, const char* func);
@@ -84,23 +85,23 @@ static void DotBegin(FILE* dotFile)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-static void DotBeginSubGraph1(FILE* dotFile)
-{
-    assert(dotFile);
-    fprintf(dotFile, "subgraph sg1{\nrankdir=TB;\ngraph [];\n");
-    return;
-}
+// static void DotBeginSubGraph1(FILE* dotFile)
+// {
+//     assert(dotFile);
+//     fprintf(dotFile, "subgraph sg1{\nrankdir=TB;\ngraph [];\n");
+//     return;
+// }
 
-//----------------------------------------------------------------------------------------------------------------------
+// //----------------------------------------------------------------------------------------------------------------------
 
-static void DotBeginSubGraph2(FILE* dotFile)
-{
-    assert(dotFile);
-    fprintf(dotFile, "subgraph sg2{\nrankdir=LR;\ngraph [];\n");
-    return;
-}
+// static void DotBeginSubGraph2(FILE* dotFile)
+// {
+//     assert(dotFile);
+//     fprintf(dotFile, "subgraph sg2{\nrankdir=LR;\ngraph [];\n");
+//     return;
+// }
 
-//----------------------------------------------------------------------------------------------------------------------
+// //----------------------------------------------------------------------------------------------------------------------
 
 static void DotEnd(FILE* dotFile)
 {

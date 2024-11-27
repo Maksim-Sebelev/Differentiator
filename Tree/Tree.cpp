@@ -1,14 +1,14 @@
-#include "Tree.h"
-
 #include <malloc.h>
 #include <assert.h>
 #include <string.h>
+#include "Tree.h"
+
 #include "../Onegin/onegin.h"
 #include "../Common/ColorPrint.h"
 #include "../Common/GlobalInclude.h"
 
 
-static Node_t*      GetNode                (char** buffer, size_t bufSize, size_t* buffer_i);
+static Node_t*      GetNode                (const char** buffer, size_t bufSize, size_t* buffer_i);
 
 static bool         IsntError              (const TreeErr* err);
 
@@ -23,19 +23,14 @@ static bool         HasOperationChildren   (const Node_t* node);
 static bool         HasFuncLeftChildOnly   (const Node_t* node);
    
 
-static TreeElem_t   GetNodeType            (char** buffer, size_t* buffer_i);
-static bool         IsLeftBracket          (char** buffer, size_t* buffer_i);
-static bool         IsRightBracket         (char** buffer, size_t* buffer_i);
-static bool         IsNull                 (char** buffer, size_t* buffer_i);
+static TreeElem_t   GetNodeType            (const char** buffer, size_t* buffer_i);
+static bool         IsLeftBracket          (const char** buffer, size_t* buffer_i);
+static bool         IsRightBracket         (const char** buffer, size_t* buffer_i);
+static bool         IsNull                 (const char** buffer, size_t* buffer_i);
 
-static const char*  GetTypeInStrFormat     (NodeArgType type);
-
-static void        PrintPrefTreeHelper     (const Node_t* node);
 static void        PrintInfixTreeHelper    (const Node_t* node);
 
 static void        PrintError              (const TreeErr* err);
-
-TreeErr            TreeVerif               (const Tree_t* tree, TreeErr* err, const char* file, int Line, const char* Func);
 static TreeErr     AllNodeVerif            (const Node_t* node, TreeErr* err, size_t* treeSize);
 static TreeErr     NodeVerifHelper         (const Node_t* node, TreeErr* err);
 static TreeErr     TreeDtorHelper          (Node_t** node, TreeErr* Err);
@@ -43,7 +38,7 @@ static TreeErr     TreeDtorHelper          (Node_t** node, TreeErr* Err);
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-TreeErr TreeCtor(Tree_t* tree, char** buffer, size_t bufSize)
+TreeErr TreeCtor(Tree_t* tree, const char** buffer, size_t bufSize)
 {
     assert(tree);
 
@@ -57,7 +52,7 @@ TreeErr TreeCtor(Tree_t* tree, char** buffer, size_t bufSize)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------- TreeDtor(Tree_t* tree)
 
-TreeErr TreeDtor(Tree_t* tree, char** buffer)
+TreeErr TreeDtor(Tree_t* tree, const char** buffer)
 {
     assert(tree);
     assert(tree->root);
@@ -100,7 +95,7 @@ static TreeErr TreeDtorHelper(Node_t** node, TreeErr* Err)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-TreeErr NodeCtor(Node_t** node, const NodeArgType type, char* arg,  Node_t* left, Node_t* right)
+TreeErr NodeCtor(Node_t** node, NodeArgType type, const char* arg,  Node_t* left, Node_t* right)
 {
     TreeErr Err = {};
 
@@ -169,7 +164,7 @@ TreeErr NodeCopy(Node_t** copy, const Node_t* node)
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-TreeErr SetNode(Node_t** node, NodeArgType type, char* arg, Node_t* left, Node_t* right)
+TreeErr SetNode(Node_t** node, NodeArgType type, const char* arg, Node_t* left, Node_t* right)
 {
     assert(node);
     assert(*node);
@@ -188,10 +183,8 @@ TreeErr SetNode(Node_t** node, NodeArgType type, char* arg, Node_t* left, Node_t
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetNode(char** buffer, size_t bufSize, size_t* buffer_i)
+static Node_t* GetNode(const char** buffer, size_t bufSize, size_t* buffer_i)
 {
-    printf("buffer_i = %lu\n", *buffer_i);
-
     if (IsNull(buffer, buffer_i))
     {
         (*buffer_i)++;
@@ -222,11 +215,9 @@ static Node_t* GetNode(char** buffer, size_t bufSize, size_t* buffer_i)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static TreeElem_t GetNodeType(char** buffer, size_t* buffer_i)
+static TreeElem_t GetNodeType(const char** buffer, size_t* buffer_i)
 {
-    TreeElem_t node_data = {};
-
-    char*       arg  = buffer[*buffer_i];
+    const char* arg  = buffer[*buffer_i];
     NodeArgType type = NodeArgType::undefined;
 
     (*buffer_i)++;
@@ -290,42 +281,51 @@ Function GetFunctionType(const char* function)
 {
     assert(function);
 
-    if (strcmp(function, "ln") == 0)
+    if (strcmp(function, "ln")     == 0)
         return Function::ln;
 
-    if (strcmp(function, "sin") == 0)
-        return Function::ln;
+    if (strcmp(function, "sin")    == 0)
+        return Function::sin;
     
-    if (strcmp(function, "sin") == 0)
-        return Function::ln;
+    if (strcmp(function, "cos")    == 0)
+        return Function::cos;
     
-    if (strcmp(function, "cos") == 0)
-        return Function::ln;
-    
-    if (strcmp(function, "tg") == 0)
-        return Function::ln;
-    
-    if (strcmp(function, "ctg") == 0)
-        return Function::ln;
+    if (strcmp(function, "tg")     == 0)
+        return Function::tg;
+
+    if (strcmp(function, "ctg")    == 0)
+        return Function::ctg;
+
+    if (strcmp(function, "sh")     == 0)
+        return Function::sh;
+
+    if (strcmp(function, "ch")     == 0)
+        return Function::ch;
+
+    if (strcmp(function, "th")     == 0)
+        return Function::th;
+
+    if (strcmp(function, "cth")     == 0)
+        return Function::cth;
 
     if (strcmp(function, "arcsin") == 0)
-        return Function::ln;
+        return Function::arcsin;
 
     if (strcmp(function, "arccos") == 0)
-        return Function::ln;
+        return Function::arccos;
     
-    if (strcmp(function, "arctg") == 0)
-        return Function::ln;
+    if (strcmp(function, "arctg")  == 0)
+        return Function::arctg;
     
     if (strcmp(function, "arcctg") == 0)
-        return Function::ln;
+        return Function::arcctg;
     
     return Function::undefined_function;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsLeftBracket(char** buffer, size_t* buffer_i)
+static bool IsLeftBracket(const char** buffer, size_t* buffer_i)
 {
     const char* bufElem = buffer[*buffer_i];
     return strcmp(bufElem, "(") == 0;
@@ -333,7 +333,7 @@ static bool IsLeftBracket(char** buffer, size_t* buffer_i)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsRightBracket(char** buffer, size_t* buffer_i)
+static bool IsRightBracket(const char** buffer, size_t* buffer_i)
 {
     const char* bufElem = buffer[*buffer_i];
     return strcmp(bufElem, ")") == 0;
@@ -341,7 +341,7 @@ static bool IsRightBracket(char** buffer, size_t* buffer_i)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsNull(char** buffer, size_t* buffer_i)
+static bool IsNull(const char** buffer, size_t* buffer_i)
 {
     const char* bufElem = buffer[*buffer_i];
     return strcmp(bufElem, "nil") == 0;
@@ -425,6 +425,11 @@ static bool HasOperationChildren(const Node_t* node)
 {
     assert(node);
     assert(node->data.type == NodeArgType::operation);
+
+    if (strcmp(node->data.arg, "-") == 0)
+    {
+        return (node->left);
+    }
 
     return (node->left) && (node->right);
 }
@@ -782,31 +787,6 @@ void TreeAssertPrint(TreeErr* err, const char* file, const int line, const char*
         printf("\n");
     }
     return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------
-
-static const char* GetTypeInStrFormat(NodeArgType type)
-{
-    switch (type)
-    {
-    case NodeArgType::number:
-        return "num";
-        break;
-    
-    case NodeArgType::operation:
-        return "opr";
-        break;
-
-    case NodeArgType::variable:
-        return "var";
-        break;
-    
-    default:
-        return "und";
-        break;
-    }
-    return "und";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------

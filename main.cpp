@@ -11,7 +11,7 @@ int main()
     Tree_t tree = {};
 
     size_t bufSize = 0;
-    char** buffer = ReadBufferFromFile(inputFile, &bufSize);
+    const char** buffer = ReadBufferFromFile(inputFile, &bufSize);
 
     TREE_ASSERT(TreeCtor(&tree, buffer, bufSize));
 
