@@ -181,6 +181,27 @@ TreeErr NodeCopy(Node_t** copy, const Node_t* node)
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 
+TreeErr NodeSetCopy(Node_t* copy, const Node_t* node)
+{
+    assert(node);
+
+    TreeErr err = {};
+
+    NodeArgType type  = node->data.type;
+    Number      num   = node->data.num;
+    Operation   oper  = node->data.oper;
+    Function    func  = node->data.func;
+    Variable    var   = node->data.var;
+    Node_t*     left  = node->left;
+    Node_t*     right = node->right;
+
+    TREE_ASSERT(SetNode(copy, type, num, oper, func, var, left, right));
+
+    return NODE_VERIF(copy, err);
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------
+
 TreeErr SetNode(Node_t* node, NodeArgType type, Number num, Operation oper, Function func, Variable var, Node_t* left, Node_t* right)
 {
     assert(node);
@@ -210,7 +231,6 @@ static Node_t* GetNode(const char** buffer, size_t bufSize, size_t* buffer_i)
     }
 
     Node_t* node = {};
-    // _UNDF(&node);
     node = (Node_t*) calloc(1, sizeof(Node_t));
 
     if (IsLeftBracket(buffer, buffer_i))
@@ -731,6 +751,7 @@ static bool IsNodeVariableTypeUndef(const Node_t* node)
 static void IsOnlyOneNodeTypeNotUndefined(const Node_t* node, TreeErr* err)
 {
     assert(node);
+    assert(err);
 
     NodeArgType type = node->data.type;
     Number      num  = node->data.num;
@@ -842,7 +863,7 @@ static void PrintError(const TreeErr* Err)
             break;
         
         case TreeErrorType::VAR_TYPE_NODES_ARG_IS_UNDEFINED:
-            COLOR_PRINT(RED, "Error: Node has 'variable' type, but arg is unefined.\n");
+            COLOR_PRINT(RED, "Error: Node has 'variable' type, but arg is undefined.\n");
             break;
 
         case TreeErrorType::VAR_HAS_INCORRECT_CHILD_QUANT:
@@ -891,6 +912,10 @@ static void PrintError(const TreeErr* Err)
 
         case TreeErrorType::UNDEFINED_OPERATION_TYPE:
             COLOR_PRINT(RED, "Error: Node has 'operation' type, bit it is undefined.\n");
+            break;
+
+        case TreeErrorType::DIVISION_BY_0:
+            COLOR_PRINT(RED, "Error: division by 0.\n");
             break;
 
         default:

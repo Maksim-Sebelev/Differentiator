@@ -1,178 +1,458 @@
-// #include <stdio.h>
-// #include <assert.h>
-// #include <string.h>
-// #include <math.h>
-// #include "CleanTree.h"
-// #include "../Tree/Tree.h"
-// #include "../Onegin/onegin.h"
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+#include "CleanTree.h"
+#include "../Tree/Tree.h"
+#include "../Onegin/onegin.h"
+#include "DiffDump.h"
+
+static TreeErr CleanTreeHelper                      (Node_t* node);
+static TreeErr CleanOperation                       (Node_t* node, bool* WasChange);
+
+static TreeErr HandleCleanOpearationWith2Num        (Node_t* node);
+static TreeErr HandleCleanOpearationWith0Child      (Node_t* node);
+
+static TreeErr HandleCleanLeft0                     (Node_t* node);
+static TreeErr HandleCleanRight0                    (Node_t* node);
+
+static TreeErr Create0Node                          (Node_t* node);
+static TreeErr Create1Node                          (Node_t* node);
 
 
-// static TreeErr CleanTreeHelper  (Node_t** node);
 
-// typedef int TreeElemIntArg;
+static bool    IsArgNum                             (const Node_t* node);
+static bool    IsArgOper                            (const Node_t* node);
+static bool    IsArgFunc                            (const Node_t* node);
+static bool    IsArgVar                             (const Node_t* node);
+static bool    HasNode2NumChildren                  (const Node_t* node);
+static bool    HasNode0Child                        (const Node_t* node);
+static bool    IsNum0                               (const Node_t* node);
 
-// //----------------------------------------------------------------------------------------------------------------------------------
+static Number  MakeArithmeticOperation              (Number firstOpearnd, Number secondOperand, Operation Operator);
+static Number  pow                                  (Number firstOperand, Number secondOperand);
 
-// TreeErr CleanTree(Tree_t* tree)
-// {
-//     assert(tree);
+//----------------------------------------------------------------------------------------------------------------------------------
 
-//     TreeErr err = {};
+TreeErr CleanTree(Tree_t* tree)
+{
+    assert(tree);
+
+    TreeErr err = {};
+
+    TREE_ASSERT(CleanTreeHelper(tree->root));
+
+    return TREE_VERIF(tree, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr CleanTreeHelper(Node_t* node)
+{
+    assert(node);
+
+    TreeErr err = {};
+    NODE_RETURN_IF_ERR(node, err);
+
+    if (node->left)
+    {
+        TREE_ASSERT(CleanTreeHelper(node->left));
+    }
+
+    if (node->right)
+    {
+        TREE_ASSERT(CleanTreeHelper(node->right));
+    }
 
 
-//     return TREE_VERIF(tree, err);
-// }
+    NodeArgType type = node->data.type;
+    bool WasChange = false;
 
-// //----------------------------------------------------------------------------------------------------------------------------------
+    if (type == NodeArgType::operation)
+    {
+        TREE_ASSERT(CleanOperation(node, &WasChange));
+    }
 
-// static TreeErr CleanTreeHelper(Node_t** node)
-// {
-//     assert(node);
-//     assert(*node);
+    return NODE_VERIF(node, err);
+}
 
-//     TreeErr err = {};
-//     NODE_RETURN_IF_ERR(*node, err);
+//----------------------------------------------------------------------------------------------------------------------------------
 
-//     NodeArgType type = (*node)->data.type;
+static TreeErr CleanOperation(Node_t* node, bool* WasChange)
+{
+    assert(node);
 
-//     switch (type)
-//     {
+    TreeErr err = {};
+    NODE_RETURN_IF_ERR(node, err);
 
-//     default:
-//         break;
-//     }
+    if (HasNode2NumChildren(node))
+    {
+        TREE_ASSERT(HandleCleanOpearationWith2Num(node));
+        *WasChange = true;
+    }
 
-//     return NODE_VERIF(*node, err);
-// }
+    else if (HasNode0Child(node))
+    {
+        // TREE_ASSERT(HandleCleanOpearationWith0Child(node));
+        *WasChange = true;
+    }
 
-// //----------------------------------------------------------------------------------------------------------------------------------
 
-// static TreeErr CleanOperation(Node_t** node)
-// {
-//     assert(node);
-//     assert(*node);
+    return NODE_VERIF(node, err);
+}
 
-//     TreeErr err = {};
-//     NODE_RETURN_IF_ERR(*node, err);
+//----------------------------------------------------------------------------------------------------------------------------------
 
-//     Operation operation = GetOperationType((*node)->data.arg);
+static TreeErr HandleCleanOpearationWith2Num(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+    assert(IsArgOper(node));
+    assert(IsArgNum(node->left));
+    assert(IsArgNum(node->right));
 
-//     switch (operation)
-//     {
+    TreeErr err = {};
+
+    Operation operation = node->data.oper;
+
+    Number    firstNum  = node->left->data.num;
+    Number    secondNum = node->right->data.num;
+
+    Number    result    = MakeArithmeticOperation(firstNum, secondNum, operation);
+
+    NodeDtor(node->left);
+    NodeDtor(node->right);
+
+    _SET_NUM(node, result);
+
+    return NODE_VERIF(node, err);    
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr HandleCleanOpearationWith0Child(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+    assert(IsArgOper(node));
+    assert(IsNum0(node->left) || IsNum0(node->right));
+
+    TreeErr err = {};
+
+    if (IsNum0(node->left))
+    {
+        TREE_ASSERT(HandleCleanLeft0(node));
+    }
+
+    else if (IsNum0(node->right))
+    {
+        TREE_ASSERT(HandleCleanRight0(node));
+    }
+
+    return NODE_VERIF(node, err);    
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr HandleCleanLeft0(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+    assert(IsArgOper(node));
+    assert(IsNum0(node->left));
+
+    TreeErr err = {};
+
+    Operation operation = node->data.oper;
+
+    switch (operation)
+    {
+        case Operation::plus:
+        {
+            TREE_ASSERT(NodeDtor(node->left));
+            Node_t* temp = node->right;
+            TREE_ASSERT(NodeSetCopy(node, node->right));
+            TREE_ASSERT(NodeDtor(temp));
+            break;
+        }
+
+        case Operation::minus:
+        {
+            TREE_ASSERT(NodeDtor(node->left));
+            break;
+        }
+
+        case Operation::mul:
+        {
+            TREE_ASSERT(Create0Node(node));
+            break;
+        }
+
+        case Operation::dive:
+        {
+            TREE_ASSERT(Create0Node(node));
+            break;
+        }
+
+        case Operation::power:
+        {
+            TREE_ASSERT(Create0Node(node));
+            break;
+        }
+
+        case Operation::undefined_operation:
+        {
+            err.err = UNDEFINED_OPERATION_TYPE;
+            return NODE_VERIF(node, err);
+            break;
+        }
+
+        default:
+        {
+            assert(0 && "You forgot about some operation in handleCleanLeft0.\n");
+            break;
+        }
+    }
+
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr HandleCleanRight0(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+    assert(IsArgOper(node));
+    assert(IsNum0(node->right));
+
+    TreeErr err = {};
+
+    Operation operation = node->data.oper;
+
+    GRAPHIC_DUMP(node);
+
+    switch (operation)
+    {
+        case Operation::plus:
+        {
+
+            TREE_ASSERT(NodeDtor(node->right));
+            Node_t* temp = node->left;
+            TREE_ASSERT(NodeSetCopy(node, node->left));
+            TREE_ASSERT(NodeDtor(temp));
+            break;
+        }
+
+        case Operation::minus:
+        {
+            TREE_ASSERT(NodeDtor(node->right));
+            node->right = nullptr;
+            break;
+        }
+
+        case Operation::mul:
+        {
+            TREE_ASSERT(Create0Node(node));
+            break;
+        }
+
+        case Operation::dive:
+        {
+            err.err = TreeErrorType::DIVISION_BY_0;
+            return NODE_VERIF(node, err);
+            break;
+        }
+
+        case Operation::power:
+        {
+            TREE_ASSERT(Create1Node(node));
+            break;
+        }
+
+        case Operation::undefined_operation:
+        {
+            err.err = UNDEFINED_OPERATION_TYPE;
+            return NODE_VERIF(node, err);
+            break;
+        }
+
+        default:
+        {
+            assert(0 && "You forgot about some operation in handleCleanLeft0.\n");
+            break;
+        }
+    }
+
+    // GRAPHIC_DUMP(node);
+
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr Create0Node(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+
+    TreeErr err = {};
+
+    TREE_ASSERT(NodeDtor(node->left));
+    TREE_ASSERT(NodeDtor(node->right));
+    _SET_NUM(node, 0);
+
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr Create1Node(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+
+    TreeErr err = {};
+
+    TREE_ASSERT(NodeDtor(node->left));
+    TREE_ASSERT(NodeDtor(node->right));
+    _SET_NUM(node, 1);
+
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static Number MakeArithmeticOperation(Number firstOpearnd, Number secondOperand, Operation Operator)
+{
+    switch (Operator)
+    {
+        case Operation::plus:
+            return firstOpearnd + secondOperand;
+            break;
+
+        case Operation::minus:
+            return firstOpearnd - secondOperand;
+            break;
+
+        case Operation::mul:
+            return firstOpearnd * secondOperand;
+            break;
+
+        case Operation::dive:
+            assert(secondOperand != 0);
+            return firstOpearnd / secondOperand;
+            break;
+
+        case Operation::power:
+            return pow(firstOpearnd, secondOperand);
+            break;
+
+        case Operation::undefined_operation:
+            assert(0 && "Undefined operation.\n");
+            break;
+
+        default:
+            assert(0 && "You forgot about some operation.\n");
+            return 0;
+            break;
+    }
+
+    assert(0 && "We must not be here.\n");
+    return 0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsArgNum(const Node_t* node)
+{   
+    assert(node);
+
+    return node->data.type == NodeArgType::number;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsArgOper(const Node_t* node)
+{   
+    assert(node);
+
+    return node->data.type == NodeArgType::operation;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsArgFunc(const Node_t* node)
+{   
+    assert(node);
+
+    return node->data.type == NodeArgType::function;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsArgVar(const Node_t* node)
+{   
+    assert(node);
+
+    return node->data.type == NodeArgType::variable;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static bool HasNode2NumChildren(const Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+
+    return (IsArgNum(node->left) && IsArgNum(node->right));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsNum0(const Node_t* node)
+{
+    assert(node);
+    return ((node->data.num == 0) && IsArgNum(node));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static bool HasNode0Child(const Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
     
-//     default:
-//         break;
-//     }
+    return (IsNum0(node->left) || IsNum0(node->right));
+}
 
-//     return NODE_VERIF(*node, err);
-// }
+//----------------------------------------------------------------------------------------------------------------------------------
 
-// //----------------------------------------------------------------------------------------------------------------------------------
+static Number pow(Number firstNum, Number secondNum)
+{
+    assert(secondNum >= 0);
 
-// static TreeErr HandleCleanPlus(Node_t** node)
-// {
-//     assert(node);
-//     assert(*node);
-//     assert((*node)->left);
-//     assert((*node)->right);
+    int res = 1;
+    for (size_t i = 0; i < secondNum; i++)
+    {
+        res *= firstNum;
+    }
+    return res;
+}
 
-//     TreeErr err = {};
-//     NODE_RETURN_IF_ERR(*node, err);
-//     const char* arg_left  = (*node)->left-> data.arg;
-//     const char* arg_right = (*node)->right->data.arg;
-
-//     if (IsArgInt((*node)->left) && IsArgInt((*node)->right))
-//     {
-//         TreeElemIntArg argl = strtoi(arg_left);    
-//         TreeElemIntArg argr = strtoi(arg_right);
-
-//         TREE_ASSERT(NodeDtor(&(*node)->left));
-//         TREE_ASSERT(NodeDtor(&(*node)->right));
-
-
-
-//     }
-
-
-//     return NODE_VERIF(*node, err);
-// }
-
-// //----------------------------------------------------------------------------------------------------------------------------------
-
-// static bool IsArgInt(Node_t* node)
-// {   
-//     assert(node);
-
-//     const char* arg = node->data.arg;
-//     char* argEnd = nullptr;
-
-//     strtol(arg, &argEnd, 10);
-//     assert(argEnd);
-
-//     return((int) strlen(arg) == argEnd - arg);
-// }
-
-// //----------------------------------------------------------------------------------------------------------------------------------
-
-// static TreeErr HandleCLeanOperation(Node_t** node)
-// {
-//     assert(node);
-//     assert(*node);
-//     assert((*node)->left);
-//     assert((*node)->right);
-
-//     TreeErr err = {};
-//     NODE_RETURN_IF_ERR(*node, err);
+//----------------------------------------------------------------------------------------------------------------------------------
 
 
 
 
-//     return NODE_VERIF(*node, err);
-// }
 
-// //----------------------------------------------------------------------------------------------------------------------------------
 
-// static TreeElemIntArg MakeArithmeticOperation(TreeElemIntArg firstOpearnd, TreeElemIntArg secondOperand, Operation Operator)
-// {
-//     switch (Operator)
-//     {
-//         case Operation::plus:
-//         {
-//             return firstOpearnd + secondOperand;
-//         }
-
-//         case Operation::minus:
-//         {
-//             return firstOpearnd - secondOperand;
-//         }
-
-//         case Operation::mul:
-//         {
-//             return firstOpearnd * secondOperand;
-//         }
-
-//         case Operation::dive:
-//         {
-//             return firstOpearnd - secondOperand;
-//         }
-
-//         case Operation::power:
-//         {
-//             return pow(firstOpearnd, secondOperand);
-//         }
-
-//         case Operation::undefined_operation:
-//         {
-//             assert(0 && "Undefined operation.\n");
-//         }
-
-//         default:
-//         {
-//             assert(0 && "You forgot about some operation.\n");
-//         }
-//     }
-// }
-
-// //----------------------------------------------------------------------------------------------------------------------------------
 
 

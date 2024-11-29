@@ -1,1 +1,1 @@
-( * ( ctg ( sh ( * ( x nil nil ) ( ln ( x  nil nil ) nil ) )  nil ) nil ) ( + ( x nil nil ) ( cos ( * ( x nil nil ) ( 333 nil nil ) ) nil )  ) )
+( / ( ^ ( x nil nil ) ( 2 nil nil ) ) ( ^ ( ctg ( x nil nil ) nil ) ( x nil nil ) ) )

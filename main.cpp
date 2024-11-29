@@ -2,6 +2,7 @@
 #include "Tree/Tree.h"
 #include "Differentiator/Differentiator.h"
 #include "Differentiator/DiffDump.h"
+#include "Differentiator/CleanTree.h"
 #include "Onegin/onegin.h"
 
 
@@ -18,8 +19,12 @@ int main()
     // TEXT_DUMP(tree.root);
     GRAPHIC_DUMP(tree.root);
 
+
     TREE_ASSERT(Diff(&tree));
 
+    GRAPHIC_DUMP(tree.root);
+
+    TREE_ASSERT(CleanTree(&tree));
     // PrintInfixTree(&tree);
 
     GRAPHIC_DUMP(tree.root);

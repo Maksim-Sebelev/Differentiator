@@ -483,7 +483,17 @@ void PrintAllNodeInfo(const Node_t* node, const char* file, const int line, cons
     COLOR_PRINT(GREEN, "node:\n");
 
     COLOR_PRINT(CYAN,  "type  = '%s'\n",   GetNodeTypeInStr  (node));
-    COLOR_PRINT(CYAN,  "arg   = '%s'\n\n", GetNodeArgInStr   (node));
+
+    if (node->data.type == NodeArgType::number)
+    {
+        COLOR_PRINT(CYAN,  "arg   = '%d'\n\n", node->data.num);
+
+    }
+
+    else
+    {
+        COLOR_PRINT(CYAN,  "arg   = '%s'\n\n", GetNodeArgInStr   (node));
+    }
 
     COLOR_PRINT(CYAN,  "num   = '%d'\n",   node->data.num);
     COLOR_PRINT(CYAN,  "oper  = '%s'\n",   GetOperationInStr (node->data.oper));
@@ -491,7 +501,7 @@ void PrintAllNodeInfo(const Node_t* node, const char* file, const int line, cons
     COLOR_PRINT(CYAN,  "var   = '%s'\n\n", GetVariableInStr  (node->data.var));
 
     COLOR_PRINT(VIOLET, "left  = %p\n", node->left);
-    COLOR_PRINT(VIOLET, "rgiht = %p\n", node->right);
+    COLOR_PRINT(VIOLET, "right = %p\n", node->right);
 
     printf("\n\n");
     return;

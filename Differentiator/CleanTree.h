@@ -1,7 +1,8 @@
-// #ifndef CLEAN_TREE_H
-// #define CLEAN_TREE_H
+#ifndef CLEAN_TREE_H
+#define CLEAN_TREE_H
 
-// TreeErr CleanTree       (Tree_t* tree);
+#include "../Tree/Tree.h"
 
+TreeErr CleanTree    (Tree_t* tree);
 
-// #endif
+#endif
