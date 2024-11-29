@@ -471,7 +471,6 @@ static const char* GetFuncInStr(Function func)
 
 void PrintAllNodeInfo(const Node_t* node, const char* file, const int line, const char* func)
 {
-    assert(node);
     assert(file);
     assert(func);
 
@@ -481,6 +480,12 @@ void PrintAllNodeInfo(const Node_t* node, const char* file, const int line, cons
     COLOR_PRINT(YELLOW, "func [%s]\n\n", func);
 
     COLOR_PRINT(GREEN, "node:\n");
+
+    if (!node)
+    {
+        COLOR_PRINT(RED, "'nullptr'\n\n");
+        return;
+    }
 
     COLOR_PRINT(CYAN,  "type  = '%s'\n",   GetNodeTypeInStr  (node));
 
