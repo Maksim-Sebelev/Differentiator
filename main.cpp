@@ -15,11 +15,12 @@ int main()
 
     TREE_ASSERT(TreeCtor(&tree, buffer, bufSize));
 
+    // TEXT_DUMP(tree.root);
     GRAPHIC_DUMP(tree.root);
 
     TREE_ASSERT(Diff(&tree));
 
-    PrintInfixTree(&tree);
+    // PrintInfixTree(&tree);
 
     GRAPHIC_DUMP(tree.root);
 

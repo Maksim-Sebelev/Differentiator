@@ -21,4 +21,11 @@ if (!(flag))                                    \
     return returnElem;                             \
 }                                                   \
 
+#define RETURN_IF_TRUE(flag, returnElem, ...) \
+if ((flag))                                    \
+{                                                \
+    __VA_ARGS__;                                  \
+    return returnElem;                             \
+}     
+
 #endif
