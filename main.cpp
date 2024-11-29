@@ -16,7 +16,6 @@ int main()
 
     TREE_ASSERT(TreeCtor(&tree, buffer, bufSize));
 
-    // TEXT_DUMP(tree.root);
     GRAPHIC_DUMP(tree.root);
 
 
@@ -25,7 +24,6 @@ int main()
     GRAPHIC_DUMP(tree.root);
 
     TREE_ASSERT(CleanTree(&tree));
-    // PrintInfixTree(&tree);
 
     GRAPHIC_DUMP(tree.root);
 

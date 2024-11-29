@@ -133,14 +133,15 @@ TreeErr NodeCtor(Node_t** node, NodeArgType type, Number num, Operation oper, Fu
 TreeErr NodeDtor(Node_t* node)
 {
     assert(node);
-    // assert(node->left  == nullptr);
-    // assert(node->right == nullptr);
 
-    TreeErr Err = {};
+    TreeErr err = {};
+
+    // node->left  = nullptr;
+    // node->right = nullptr;
 
     FREE(node);
 
-    return Err;
+    return err;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------

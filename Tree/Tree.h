@@ -30,6 +30,7 @@ enum TreeErrorType
     UNDEFINED_FUNCTION_TYPE,
     INCORRECT_TREE_SIZE,
     DIVISION_BY_0,
+    NODE_NULL,
 };
 
 

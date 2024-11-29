@@ -6,34 +6,44 @@
 #include "../Onegin/onegin.h"
 #include "DiffDump.h"
 
-static TreeErr CleanTreeHelper                      (Node_t* node);
-static TreeErr CleanOperation                       (Node_t* node, bool* WasChange);
+static TreeErr CleanTreeHelper                         (Node_t* node);
+static TreeErr CleanOperation                          (Node_t* node);
 
-static TreeErr HandleCleanMinusWith1NumChild        (Node_t* node);
+static TreeErr HandleCleanMinusWith1NumChild           (Node_t* node);
 
-static TreeErr HandleCleanOpearationWith2Num        (Node_t* node);
-static TreeErr HandleCleanOpearationWith0Child      (Node_t* node);
+static TreeErr HandleCleanOpearationWith2Num           (Node_t* node);
+static TreeErr HandleCleanOperationWith0Child          (Node_t* node);
 
-static TreeErr HandleCleanLeft0                     (Node_t* node);
-static TreeErr HandleCleanRight0Num                 (Node_t* node);
+static TreeErr HandleCleanLeft0                        (Node_t* node);
+static TreeErr HandleCleanRight0Num                    (Node_t* node);
 
 static TreeErr Create0NumNode                          (Node_t* node);
 static TreeErr Create1NumNode                          (Node_t* node);
 
+static TreeErr HandleCleanOperationWith1NumChild      (Node_t* node);
 
+static TreeErr HandleCleanOperationWith1NumLeftChild   (Node_t* node);
+static TreeErr HandleCleanOperationWith1NumRightChild  (Node_t* node);
 
-static bool    IsArgNum                             (const Node_t* node);
-static bool    IsArgOper                            (const Node_t* node);
-static bool    IsArgFunc                            (const Node_t* node);
-static bool    IsArgVar                             (const Node_t* node);
-static bool    HasNode2NumChildren                  (const Node_t* node);
+static TreeErr SetNodeLeftChild                        (Node_t* node);
+static TreeErr SetNodeRightChild                       (Node_t* node);
+
+static TreeErr CleanFunction                           (Node_t* node);
+
+static TreeErr HandleCleanLn                           (Node_t* node);
+
+static bool    IsArgNum                                (const Node_t* node);
+static bool    IsArgOper                               (const Node_t* node);
+static bool    HasNode2NumChildren                     (const Node_t* node);
 static bool    HasNode0NumChild                        (const Node_t* node);
-static bool    IsNum0                               (const Node_t* node);
-static bool    IsOperationCleanSituationGood        (const Node_t* node);
-static bool    IsNodeMinusWith1NumChild             (const Node_t* node);
+static bool    IsNum0                                  (const Node_t* node);
+static bool    IsArgLn                                 (const Node_t* node);
+static bool    IsOperationCleanSituationGood           (const Node_t* node);
+static bool    IsNodeMinusWith1NumChild                (const Node_t* node);
+static bool    HasNode1NumChild                        (const Node_t* node);
 
-static Number  MakeArithmeticOperation              (Number firstOpearnd, Number secondOperand, Operation Operator);
-static Number  pow                                  (Number firstOperand, Number secondOperand);
+static Number  MakeArithmeticOperation                 (Number firstOpearnd, Number secondOperand, Operation Operator);
+static Number  pow                                     (Number firstOperand, Number secondOperand);
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
@@ -69,11 +79,15 @@ static TreeErr CleanTreeHelper(Node_t* node)
 
 
     NodeArgType type = node->data.type;
-    bool WasChange = false;
 
     if (type == NodeArgType::operation)
     {
-        TREE_ASSERT(CleanOperation(node, &WasChange));
+        TREE_ASSERT(CleanOperation(node));
+    }
+
+    else if (type == NodeArgType::function)
+    {
+        TREE_ASSERT(CleanFunction(node));
     }
 
     return NODE_VERIF(node, err);
@@ -81,7 +95,7 @@ static TreeErr CleanTreeHelper(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr CleanOperation(Node_t* node, bool* WasChange)
+static TreeErr CleanOperation(Node_t* node)
 {
     assert(node);
 
@@ -91,21 +105,39 @@ static TreeErr CleanOperation(Node_t* node, bool* WasChange)
     if (IsNodeMinusWith1NumChild(node))
     {
         TREE_ASSERT(HandleCleanMinusWith1NumChild(node));
-        *WasChange = true;
     }
 
     else if (HasNode2NumChildren(node))
     {
         TREE_ASSERT(HandleCleanOpearationWith2Num(node));
-        *WasChange = true;
     }
 
     else if (HasNode0NumChild(node))
     {
-        TREE_ASSERT(HandleCleanOpearationWith0Child(node));
-        *WasChange = true;
+        TREE_ASSERT(HandleCleanOperationWith0Child(node));
     }
 
+    else if (HasNode1NumChild(node))
+    {
+        TREE_ASSERT(HandleCleanOperationWith1NumChild(node));
+    }
+
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr CleanFunction(Node_t* node)
+{
+    assert(node);
+
+    TreeErr err = {};
+    NODE_RETURN_IF_ERR(node, err);
+
+    if (IsArgLn(node))
+    {
+        TREE_ASSERT(HandleCleanLn(node));
+    }
 
     return NODE_VERIF(node, err);
 }
@@ -147,7 +179,6 @@ static TreeErr HandleCleanOpearationWith2Num(Node_t* node)
     assert(IsArgNum(node->right));
 
     TreeErr err = {};
-    TEXT_DUMP(node);
 
     if (!IsOperationCleanSituationGood(node))
     {
@@ -171,7 +202,7 @@ static TreeErr HandleCleanOpearationWith2Num(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleCleanOpearationWith0Child(Node_t* node)
+static TreeErr HandleCleanOperationWith0Child(Node_t* node)
 {
     assert(node);
     assert(node->left);
@@ -192,6 +223,183 @@ static TreeErr HandleCleanOpearationWith0Child(Node_t* node)
     }
 
     return NODE_VERIF(node, err);    
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr HandleCleanOperationWith1NumChild(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+    assert(IsArgOper(node));
+    assert(node->left->data.num == 1 || node->right->data.num == 1);
+
+    TreeErr err = {};
+
+    Number firstNum  = node->left->data.num;
+    Number secondNum = node->right->data.num;
+    
+    if (firstNum == 1)
+    {
+        TREE_ASSERT(HandleCleanOperationWith1NumLeftChild(node));
+    }
+
+    else if (secondNum == 1)
+    {
+        TREE_ASSERT(HandleCleanOperationWith1NumRightChild(node));
+    }
+
+    return NODE_VERIF(node, err); 
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr HandleCleanOperationWith1NumLeftChild(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+    assert(IsArgOper(node));
+    assert(node->left->data.num == 1);
+
+    TreeErr err = {};
+
+    Operation oper = node->data.oper;
+
+    switch (oper)
+    {
+        case Operation::plus:
+            return NODE_VERIF(node, err);
+            break;
+
+        case Operation::minus:
+            return NODE_VERIF(node, err);
+            break;
+
+        case Operation::dive:
+            return NODE_VERIF(node, err);
+            break;
+
+        case Operation::mul:
+            TREE_ASSERT(SetNodeRightChild(node));
+            return NODE_VERIF(node, err);
+            break;
+        
+        case Operation::power:
+            TREE_ASSERT(Create1NumNode(node));
+            return NODE_VERIF(node, err);
+            break;
+        
+        case Operation::undefined_operation:
+            err.err = UNDEFINED_OPERATION_TYPE;
+            return NODE_VERIF(node, err);
+            break;
+
+        default:
+            assert(0 && "You forgot about some operation in CleanTree.cpp, func - Clean1NumChild.\n");
+            return NODE_VERIF(node, err);
+            break;
+    }
+
+    assert(0 && "We must be here.\n");
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr HandleCleanOperationWith1NumRightChild(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
+    assert(IsArgOper(node));
+    assert(node->right->data.num == 1);
+
+    TreeErr err = {};
+
+    Operation oper = node->data.oper;
+
+    switch (oper)
+    {
+        case Operation::plus:
+            return NODE_VERIF(node, err);
+            break;
+
+        case Operation::minus:
+            return NODE_VERIF(node, err);
+            break;
+
+        case Operation::mul:
+            TREE_ASSERT(SetNodeLeftChild(node));
+            return NODE_VERIF(node, err);
+            break;
+        
+        case Operation::dive:
+            TREE_ASSERT(SetNodeLeftChild(node));
+            return NODE_VERIF(node, err);
+            break;
+        
+        case Operation::power:
+            TREE_ASSERT(SetNodeLeftChild(node));
+            return NODE_VERIF(node, err);
+            break;
+        
+        case Operation::undefined_operation:
+            err.err = UNDEFINED_OPERATION_TYPE;
+            return NODE_VERIF(node, err);
+            break;
+
+        default:
+            assert(0 && "You forgot about some operation in CleanTree.cpp, func - Clean1NumChild.\n");
+            return NODE_VERIF(node, err);
+            break;
+    }
+
+    assert(0 && "We must be here.\n");
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr SetNodeLeftChild(Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+
+    TreeErr err = {};
+
+    Node_t* temp_left  = node->left;
+    Node_t* temp_right = node->right;
+
+    TREE_ASSERT(NodeSetCopy(node, node->left));
+
+    TREE_ASSERT(NodeDtor(temp_left));
+    if (temp_right) TREE_ASSERT(NodeDtor(temp_right));
+
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr SetNodeRightChild(Node_t* node)
+{
+    assert(node);
+    assert(node->right);
+
+    TreeErr err = {};
+
+    Node_t* temp_left  = node->left;
+    Node_t* temp_right = node->right;
+
+    TREE_ASSERT(NodeSetCopy(node, node->right));
+
+    TREE_ASSERT(NodeDtor(temp_right));
+
+
+    if (temp_left) TREE_ASSERT(NodeDtor(temp_left));
+
+    return NODE_VERIF(node, err);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -327,7 +535,27 @@ static TreeErr HandleCleanRight0Num(Node_t* node)
         }
     }
 
-    // GRAPHIC_DUMP(node);
+    return NODE_VERIF(node, err);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr HandleCleanLn(Node_t* node)
+{
+    assert(node);
+    assert(IsArgLn(node));
+    assert(node->left);
+    assert(!node->right);
+    assert(IsArgNum(node->left));
+
+    TreeErr err = {};
+
+    Number num = node->left->data.num;
+
+    if (num == 1)
+    {
+        TREE_ASSERT(Create0NumNode(node));
+    }
 
     return NODE_VERIF(node, err);
 }
@@ -337,13 +565,12 @@ static TreeErr HandleCleanRight0Num(Node_t* node)
 static TreeErr Create0NumNode(Node_t* node)
 {
     assert(node);
-    assert(node->left);
-    assert(node->right);
 
     TreeErr err = {};
 
-    TREE_ASSERT(NodeDtor(node->left));
-    TREE_ASSERT(NodeDtor(node->right));
+    if (node->left)  TREE_ASSERT(NodeDtor(node->left));
+    if (node->right) TREE_ASSERT(NodeDtor(node->right));
+
     _SET_NUM(node, 0);
 
     return NODE_VERIF(node, err);
@@ -359,8 +586,9 @@ static TreeErr Create1NumNode(Node_t* node)
 
     TreeErr err = {};
 
-    TREE_ASSERT(NodeDtor(node->left));
-    TREE_ASSERT(NodeDtor(node->right));
+    if (node->left)  TREE_ASSERT(NodeDtor(node->left));
+    if (node->right) TREE_ASSERT(NodeDtor(node->right));
+
     _SET_NUM(node, 1);
 
     return NODE_VERIF(node, err);
@@ -387,7 +615,7 @@ static Number MakeArithmeticOperation(Number firstOpearnd, Number secondOperand,
         case Operation::dive:
             assert(secondOperand != 0);
             assert(firstOpearnd >= secondOperand);
-            assert(firstOpearnd % secondOperand == 0);
+            assert((firstOpearnd % secondOperand) == 0);
             return firstOpearnd / secondOperand;
             break;
 
@@ -397,6 +625,7 @@ static Number MakeArithmeticOperation(Number firstOpearnd, Number secondOperand,
 
         case Operation::undefined_operation:
             assert(0 && "Undefined operation.\n");
+            return 0;
             break;
 
         default:
@@ -429,24 +658,6 @@ static bool IsArgOper(const Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsArgFunc(const Node_t* node)
-{   
-    assert(node);
-
-    return node->data.type == NodeArgType::function;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-static bool IsArgVar(const Node_t* node)
-{   
-    assert(node);
-
-    return node->data.type == NodeArgType::variable;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
 static bool HasNode2NumChildren(const Node_t* node)
 {
     assert(node);
@@ -462,6 +673,15 @@ static bool IsNum0(const Node_t* node)
 {
     assert(node);
     return ((node->data.num == 0) && IsArgNum(node));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsArgLn(const Node_t* node)
+{
+    assert(node);
+
+    return (node->data.func == Function::ln);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -491,10 +711,20 @@ static bool IsNodeMinusWith1NumChild(const Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-// static bool HasNode1NumChild(const Node_t* node)
-// {
+static bool HasNode1NumChild(const Node_t* node)
+{
+    assert(node);
+    assert(node->left);
+    assert(node->right);
 
-// }
+    Number leftNum  = node->left ->data.num;
+    Number rightNum = node->right->data.num;
+
+    bool flag1 = (IsArgNum(node->left) || IsArgNum(node->right));
+    bool flag2 = (leftNum == 1 || rightNum == 1);
+
+    return (flag1 && flag2);
+}
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
@@ -510,11 +740,6 @@ static bool IsOperationCleanSituationGood(const Node_t* node)
     Operation oper       = node->data.oper;
     Number    firstNum   = node->left->data.num;
     Number    secondNum  = node->right->data.num;
-
-    TEXT_DUMP(node);
-    TEXT_DUMP(node->left);
-    TEXT_DUMP(node->right);
-
 
     bool flag1 = (oper != Operation::dive);
 
@@ -534,8 +759,8 @@ static Number pow(Number firstNum, Number secondNum)
 {
     assert(secondNum >= 0);
 
-    int res = 1;
-    for (size_t i = 0; i < secondNum; i++)
+    Number res = 1;
+    for (int i = 0; i < secondNum; i++)
     {
         res *= firstNum;
     }
