@@ -3,6 +3,6 @@
 
 #include "../Tree/Tree.h"
 
-TreeErr CleanTree    (Tree_t* tree);
+TreeErr SimplifyTree    (Tree_t* tree);
 
 #endif

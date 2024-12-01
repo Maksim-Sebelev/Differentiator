@@ -1,1 +1,1 @@
-( * ( ^ ( 1 nil nil ) ( x nil nil ) ) ( x nil nil ) )
+( ^ ( tg ( ^ ( x nil nil ) ( 2 nil nil ) ) nil ) ( sin ( /  ( x nil nil ) ( 3 nil nil )  ) nil )  )

@@ -26,7 +26,6 @@ static bool         IsNodeVariableTypeUndef        (const Node_t* node);
 static void         IsOnlyOneNodeTypeNotUndefined  (const Node_t* node, TreeErr* err);
 
 
-
 static Node_t*      GetNode                (const char** buffer, size_t bufSize, size_t* buffer_i);
 
 static TreeErr      SetNodeType            (Node_t* node, const char* arg);
@@ -39,7 +38,7 @@ static bool         IsNull                 (const char** buffer, size_t* buffer_
 static TreeErr      NodeVerifForUnfinishedNode (const Node_t* node, TreeErr* err, const char* file, const int line, const char* func);
 static void         PrintError                 (const TreeErr* err);
 static TreeErr      AllNodeVerif               (const Node_t* node, size_t* treeSize);
-static TreeErr      TreeDtorHelper             (Node_t* node, TreeErr* Err);
+
 
 #define UNFINISHED_NODE_VERIF(node, err) NodeVerifForUnfinishedNode(node, &err, __FILE__, __LINE__, __func__)
 
@@ -66,10 +65,10 @@ TreeErr TreeDtor(Tree_t* tree, const char** buffer)
 
     TreeErr Err = {};
 
-    TREE_ASSERT(TreeDtorHelper(tree->root, &Err));
+    TREE_ASSERT(NodeAndUnderTreeDtor(tree->root));
 
     tree->size = 0;
-    tree->root = NULL;
+    tree->root = nullptr;
 
     BufferDtor(buffer);
 
@@ -78,26 +77,28 @@ TreeErr TreeDtor(Tree_t* tree, const char** buffer)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr TreeDtorHelper(Node_t* node, TreeErr* Err)
+TreeErr NodeAndUnderTreeDtor(Node_t* node)
 {
+    TreeErr err = {};
+
     if (node == nullptr)
     {
-        return *Err;
+        return err;
     }
 
     if (node->left)
     {
-        TreeDtorHelper(node->left,  Err);
+        NodeAndUnderTreeDtor(node->left);
     }
 
     if (node->right)
     {
-        TreeDtorHelper(node->right, Err);
+        NodeAndUnderTreeDtor(node->right);
     }
 
     NodeDtor(node);
 
-    return *Err;
+    return err;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,8 +137,8 @@ TreeErr NodeDtor(Node_t* node)
 
     TreeErr err = {};
 
-    // node->left  = nullptr;
-    // node->right = nullptr;
+    node->left  = nullptr;
+    node->right = nullptr;
 
     FREE(node);
 
@@ -839,6 +840,10 @@ static void PrintError(const TreeErr* Err)
             return;
             break;
     
+        case TreeErrorType::NODE_NULL:
+            COLOR_PRINT(RED, "Error: node is nullptr and now this is bad.\n");
+            break;
+        
         case TreeErrorType::CTOR_CALLOC_RETURN_NULL:
             COLOR_PRINT(RED, "Error: failed alocate memory in ctor.\n");
             break;

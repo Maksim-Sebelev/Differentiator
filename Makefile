@@ -3,7 +3,7 @@ CFLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loo
 # CFLAGS = -c -Wall
 
 SOURCES = main.cpp Differentiator/Differentiator.cpp Tree/Tree.cpp Onegin/onegin.cpp Common/GlobalInclude.cpp \
-		Differentiator/DiffDump.cpp Differentiator/CleanTree.cpp \
+		Differentiator/DiffDump.cpp Differentiator/SimplifyTree.cpp Differentiator/Taylor.cpp \
 
 HEADERS = $(SOURCES:.cpp=.h)
 OBJECTS = $(SOURCES:.cpp=.o)
