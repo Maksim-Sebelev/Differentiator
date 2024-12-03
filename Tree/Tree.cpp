@@ -927,12 +927,16 @@ static Node_t* GetM();
 static Node_t* GetV();
 static Node_t* GetN();
 static Node_t* GetF();
+static Node_t* GetLn();
+static Node_t* GetSin();
+static Node_t* GetCos();
 
 static void SyntaxError(const char* msg);
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-const char* s = "ln(x)+3*ln(x^2+1)$";
+const char* s = "ln(1+ln(x*cos(x)))$";
+
 size_t p = 0;
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1098,24 +1102,17 @@ static Node_t* GetF() // funtion
 {
     if (strncmp(s + p, "ln(", 3) == 0)
     {
-        p += 3;
-        Node_t* node = GetE();
+        return GetLn();
+    }
 
-        GRAPHIC_DUMP(node);
+    if (strncmp(s + p, "sin(", 4) == 0)
+    {
+        return GetSin();
+    }
 
-        if (s[p] != ')')
-        {
-            SyntaxError(__func__);
-        }
-
-        p++;
-
-        Node_t* ln_node = {};
-        _FUNC(&ln_node, Function::ln, node);
-
-        TREE_ASSERT(SwapNode(&node, &ln_node));
-
-        return node;
+    if (strncmp(s + p, "cos(", 4) == 0)
+    {
+        return GetCos();
     }
 
     return GetP();
@@ -1123,6 +1120,70 @@ static Node_t* GetF() // funtion
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
+static Node_t* GetLn()
+{
+    assert(strncmp(s + p, "ln(", 3) == 0);
+    p += 3;
+    Node_t* node = GetE();
 
+    if (s[p] != ')')
+    {
+        SyntaxError(__func__);
+    }
+    p++;
+
+    Node_t* new_node = {};
+    _FUNC(&new_node, Function::ln, node);
+
+    TREE_ASSERT(SwapNode(&node, &new_node));
+
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetSin()
+{
+    assert(strncmp(s + p, "sin(", 4) == 0);
+    p += 4;
+    Node_t* node = GetE();
+
+    if (s[p] != ')')
+    {
+        SyntaxError(__func__);
+    }
+    p++;
+
+    Node_t* new_node = {};
+    _FUNC(&new_node, Function::sin, node);
+
+    TREE_ASSERT(SwapNode(&node, &new_node));
+
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetCos()
+{
+    assert(strncmp(s + p, "cos(", 4) == 0);
+    p += 4;
+    Node_t* node = GetE();
+
+    if (s[p] != ')')
+    {
+        SyntaxError(__func__);
+    }
+    p++;
+
+    Node_t* new_node = {};
+    _FUNC(&new_node, Function::cos, node);
+
+    TREE_ASSERT(SwapNode(&node, &new_node));
+
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #undef UNFINISHED_NODE_VERIF

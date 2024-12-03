@@ -1,27 +1,21 @@
 digraph G{
 rankdir=TB
 graph [bgcolor="#000000"];
-node0x504000000290[shape=Mrecord, style=filled, fillcolor="#168237"label ="+", color = "#777777"];
-node0x504000000050[shape=Mrecord, style=filled, fillcolor="#168237"label ="ln", color = "#777777"];
-node0x504000000010[shape=Mrecord, style=filled, fillcolor="#9b2017"label ="x", color = "#777777"];
-node0x504000000250[shape=Mrecord, style=filled, fillcolor="#168237"label ="*", color = "#777777"];
-node0x504000000090[shape=Mrecord, style=filled, fillcolor="#1692bb"label ="3", color = "#777777"];
-node0x504000000210[shape=Mrecord, style=filled, fillcolor="#168237"label ="ln", color = "#777777"];
-node0x5040000001d0[shape=Mrecord, style=filled, fillcolor="#168237"label ="+", color = "#777777"];
-node0x504000000150[shape=Mrecord, style=filled, fillcolor="#168237"label ="^", color = "#777777"];
-node0x5040000000d0[shape=Mrecord, style=filled, fillcolor="#9b2017"label ="x", color = "#777777"];
-node0x504000000110[shape=Mrecord, style=filled, fillcolor="#1692bb"label ="2", color = "#777777"];
-node0x504000000190[shape=Mrecord, style=filled, fillcolor="#1692bb"label ="1", color = "#777777"];
+node0x5040000001d0[shape=Mrecord, style=filled, fillcolor="#168237"label ="ln", color = "#777777"];
+node0x504000000190[shape=Mrecord, style=filled, fillcolor="#168237"label ="+", color = "#777777"];
+node0x504000000010[shape=Mrecord, style=filled, fillcolor="#1692bb"label ="1", color = "#777777"];
+node0x504000000150[shape=Mrecord, style=filled, fillcolor="#168237"label ="ln", color = "#777777"];
+node0x504000000110[shape=Mrecord, style=filled, fillcolor="#168237"label ="*", color = "#777777"];
+node0x504000000050[shape=Mrecord, style=filled, fillcolor="#9b2017"label ="x", color = "#777777"];
+node0x5040000000d0[shape=Mrecord, style=filled, fillcolor="#168237"label ="cos", color = "#777777"];
+node0x504000000090[shape=Mrecord, style=filled, fillcolor="#9b2017"label ="x", color = "#777777"];
 edge[color="#5b5b5b"];
-node0x504000000290->node0x504000000050;
-node0x504000000050->node0x504000000010;
-node0x504000000290->node0x504000000250;
-node0x504000000250->node0x504000000090;
-node0x504000000250->node0x504000000210;
-node0x504000000210->node0x5040000001d0;
-node0x5040000001d0->node0x504000000150;
-node0x504000000150->node0x5040000000d0;
-node0x504000000150->node0x504000000110;
 node0x5040000001d0->node0x504000000190;
+node0x504000000190->node0x504000000010;
+node0x504000000190->node0x504000000150;
+node0x504000000150->node0x504000000110;
+node0x504000000110->node0x504000000050;
+node0x504000000110->node0x5040000000d0;
+node0x5040000000d0->node0x504000000090;
 place[shape=Mrecord, style=filled, fillcolor="#1771a0",label  = "Dump place:| file: main.cpp |<f0> line: 20 |<f1> func: main", color = "#000000"];
 }
