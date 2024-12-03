@@ -117,7 +117,7 @@ struct Tree_t
     size_t  size;
 };
 
-Node_t* GetG();
+Node_t* GetG(const char* inputStr);
 
 TreeErr TreeCtor               (Tree_t*  tree, const char** buffer, size_t bufSize);
 TreeErr TreeDtor               (Tree_t*  root, const char** buffer);

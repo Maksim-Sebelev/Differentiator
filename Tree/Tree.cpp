@@ -920,68 +920,72 @@ void TreeAssertPrint(TreeErr* err, const char* file, const int line, const char*
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetE();
-static Node_t* GetT();
-static Node_t* GetP();
-static Node_t* GetM();
-static Node_t* GetV();
-static Node_t* GetN();
-static Node_t* GetF();
-static Node_t* GetLn();
-static Node_t* GetSin();
-static Node_t* GetCos();
+static Node_t* GetE   (const char* input, size_t* pointer);
+static Node_t* GetT   (const char* input, size_t* pointer);
+static Node_t* GetP   (const char* input, size_t* pointer);
+static Node_t* GetM   (const char* input, size_t* pointer);
+static Node_t* GetV   (const char* input, size_t* pointer);
+static Node_t* GetN   (const char* input, size_t* pointer);
+static Node_t* GetF   (const char* input, size_t* pointer);
+static Node_t* GetLn  (const char* input, size_t* pointer);
+static Node_t* GetSin (const char* input, size_t* pointer);
+static Node_t* GetCos (const char* input, size_t* pointer);
 
-static void SyntaxError(const char* msg);
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------
-
-const char* s = "ln(1+ln(x*cos(x)))$";
-
-size_t p = 0;
+static void SyntaxError(const char* input, size_t pointer, const char* file, const int line, const char* func);
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static void SyntaxError(const char* msg)
+static void SyntaxError(const char* input, size_t pointer, const char* file, const int line, const char* func)
 {
-    printf("syntax err in '%s' with p = %lu\n", msg, p);
+    COLOR_PRINT(RED, "SyntaxErr detected in:\n");
+    PrintPlace(file, line, func);
+    
+    COLOR_PRINT(RED, "\nSyntaxErr:\n");
+    const char* str = "input: \"";
+    size_t strSize = strlen(str);
+
+    COLOR_PRINT(CYAN, "%s%s\"\n", str, input);
+    for (size_t i = 0; i < pointer + strSize; i++) printf(" ");
+
+    COLOR_PRINT(RED, "^ p = %lu\n", pointer);
     abort();
     return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Node_t* GetG()
+#define SYNTAX_ERR(input, pointer) SyntaxError(input, pointer, __FILE__, __LINE__, __func__)
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Node_t* GetG(const char* input)
 {
-    Node_t* node = GetE();
+    size_t pointer = 0;
+    Node_t* node = GetE(input, &pointer);
 
-    GRAPHIC_DUMP(node);
-    TEXT_DUMP(node);
-
-    if (s[p] != '$')
+    if (input[pointer] != '$')
     {
-        SyntaxError(__func__);
+        SYNTAX_ERR(input, pointer);
     }
-    p++;
+
+    pointer++;
     return node;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetN()
+static Node_t* GetN(const char* input, size_t* pointer)
 {
     Number val = 0;
-    size_t old_p = p;
+    size_t old_pointer = *pointer;
 
-    while ('0' <= s[p] && s[p] <= '9')
+    while ('0' <= input[*pointer] && input[*pointer] <= '9')
     {
-        val = 10 * val + s[p] - '0';
-        p++;   
+        val = 10 * val + input[*pointer] - '0';
+        (*pointer)++;   
     }
 
-    if (p == old_p)
-    {
-        SyntaxError(__func__);
-    }
+    if (*pointer == old_pointer) SYNTAX_ERR(input, *pointer);
 
     Node_t* node = {};
     _NUM(&node, val);
@@ -991,35 +995,32 @@ static Node_t* GetN()
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetV()
+static Node_t* GetV(const char* input, size_t* pointer)
 {
     Node_t* node = {};
-    size_t old_p = p;
+    size_t old_pointer = *pointer;
 
-    if (s[p] == 'x')
+    if (input[*pointer] == 'x')
     {
         _VAR(&node, Variable::x);
-        p++;
+        (*pointer)++;
     }
 
-    if (p == old_p)
-    {
-        SyntaxError(__func__);
-    }
+    if (*pointer == old_pointer) SYNTAX_ERR(input, *pointer);
 
     return node;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetE()
+static Node_t* GetE(const char* input, size_t* pointer)
 {
-    Node_t* node = GetT();
-    while(s[p] == '+' || s[p] == '-')
+    Node_t* node = GetT(input, pointer);
+    while(input[*pointer] == '+' || input[*pointer] == '-')
     {
-        char op = s[p];
-        p++;
-        Node_t* node2 = GetT();
+        char op = input[*pointer];
+        (*pointer)++;
+        Node_t* node2 = GetT(input, pointer);
         Node_t* new_node = {};
 
         if (op == '+')
@@ -1035,15 +1036,15 @@ static Node_t* GetE()
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetT()
+static Node_t* GetT(const char* input, size_t* pointer)
 {
-    Node_t* node = GetM();
+    Node_t* node = GetM(input, pointer);
 
-    while (s[p] == '*' || s[p] == '/')
+    while (input[*pointer] == '*' || input[*pointer] == '/')
     {
-        char op = s[p];
-        p++;
-        Node_t* node2 = GetM();
+        char op = input[*pointer];
+        (*pointer)++;
+        Node_t* node2 = GetM(input, pointer);
         Node_t* new_node = {};
     
         if (op == '*')
@@ -1058,35 +1059,36 @@ static Node_t* GetT()
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetP()
+static Node_t* GetP(const char* input, size_t* pointer)
 {
-    if (s[p] == '(')
+    if (input[*pointer] == '(')
     {
-        p++;
-        Node_t* node = GetE();
-        if (s[p] != ')')
+        (*pointer)++;
+        Node_t* node = GetE(input, pointer);
+        if (input[*pointer] != ')')
         {
-            SyntaxError(__func__);
+            SYNTAX_ERR(input, *pointer);
         }
-        p++;
+
+        (*pointer)++;
         return node;
     }
 
-    if (s[p] == 'x')
-        return GetV();
+    if (input[*pointer] == 'x')
+        return GetV(input, pointer);
     
-    return GetN();
+    return GetN(input, pointer);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetM() // pow
+static Node_t* GetM(const char* input, size_t* pointer) // pow
 {
-    Node_t* node = GetF();
-    while(s[p] == '^')
+    Node_t* node = GetF(input, pointer);
+    while(input[*pointer] == '^')
     {
-        p++;
-        Node_t* node2 = GetF();
+        (*pointer)++;
+        Node_t* node2 = GetF(input, pointer);
         Node_t* new_node = {};
 
         _POW(&new_node, node, node2);
@@ -1098,39 +1100,39 @@ static Node_t* GetM() // pow
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetF() // funtion
+static Node_t* GetF(const char* input, size_t* pointer) // funtion
 {
-    if (strncmp(s + p, "ln(", 3) == 0)
+    if (strncmp(input + *pointer, "ln(", 3) == 0)
     {
-        return GetLn();
+        return GetLn(input, pointer);
     }
 
-    if (strncmp(s + p, "sin(", 4) == 0)
+    if (strncmp(input + *pointer, "sin(", 4) == 0)
     {
-        return GetSin();
+        return GetSin(input, pointer);
     }
 
-    if (strncmp(s + p, "cos(", 4) == 0)
+    if (strncmp(input + *pointer, "cos(", 4) == 0)
     {
-        return GetCos();
+        return GetCos(input, pointer);
     }
 
-    return GetP();
+    return GetP(input, pointer);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetLn()
+static Node_t* GetLn(const char* input, size_t* pointer)
 {
-    assert(strncmp(s + p, "ln(", 3) == 0);
-    p += 3;
-    Node_t* node = GetE();
+    assert(strncmp(input + *pointer, "ln(", 3) == 0);
+    *pointer += 3;
+    Node_t* node = GetE(input, pointer);
 
-    if (s[p] != ')')
+    if (input[*pointer] != ')')
     {
-        SyntaxError(__func__);
+        SYNTAX_ERR(input, *pointer);
     }
-    p++;
+    (*pointer)++;
 
     Node_t* new_node = {};
     _FUNC(&new_node, Function::ln, node);
@@ -1142,17 +1144,17 @@ static Node_t* GetLn()
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetSin()
+static Node_t* GetSin(const char* input, size_t* pointer)
 {
-    assert(strncmp(s + p, "sin(", 4) == 0);
-    p += 4;
-    Node_t* node = GetE();
+    assert(strncmp(input + *pointer, "sin(", 4) == 0);
+    *pointer += 4;
+    Node_t* node = GetE(input, pointer);
 
-    if (s[p] != ')')
+    if (input[*pointer] != ')')
     {
-        SyntaxError(__func__);
+        SYNTAX_ERR(input, *pointer);
     }
-    p++;
+    (*pointer)++;
 
     Node_t* new_node = {};
     _FUNC(&new_node, Function::sin, node);
@@ -1164,17 +1166,15 @@ static Node_t* GetSin()
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetCos()
+static Node_t* GetCos(const char* input, size_t* pointer)
 {
-    assert(strncmp(s + p, "cos(", 4) == 0);
-    p += 4;
-    Node_t* node = GetE();
+    assert(strncmp(input + *pointer, "cos(", 4) == 0);
+    *pointer += 4;
+    Node_t* node = GetE(input, pointer);
 
-    if (s[p] != ')')
-    {
-        SyntaxError(__func__);
-    }
-    p++;
+    if (input[*pointer] != ')') SYNTAX_ERR(input, *pointer);
+
+    (*pointer)++;
 
     Node_t* new_node = {};
     _FUNC(&new_node, Function::cos, node);

@@ -602,9 +602,9 @@ static bool HasNode2NumChildren(const Node_t* node)
 {
     assert(node);
     assert(node->left);
-    assert(node->right);
 
-    return (IsArgNum(node->left) && IsArgNum(node->right));
+
+    return (node->right) && (IsArgNum(node->left) && IsArgNum(node->right));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -664,10 +664,8 @@ static bool IsArgTg(const Node_t* node)
 static bool HasNode0NumChild(const Node_t* node)
 {
     assert(node);
-    assert(node->left);
-    assert(node->right);
 
-    return (IsNum0(node->left) || IsNum0(node->right));
+    return ((node->left && IsNum0(node->left)) || (node->right && IsNum0(node->right)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -690,12 +688,15 @@ static bool HasNode1NumChild(const Node_t* node)
 {
     assert(node);
     assert(node->left);
-    assert(node->right);
 
-    Number leftNum  = node->left ->data.num;
-    Number rightNum = node->right->data.num;
 
-    bool flag1 = (IsArgNum(node->left) || IsArgNum(node->right));
+    Number leftNum  = 0;
+    Number rightNum = 0;
+
+    if (node->left)  leftNum  = node->left ->data.num;
+    if (node->right) rightNum = node->right->data.num;
+
+    bool flag1 = ((node->left && IsArgNum(node->left)) || (node->right && IsArgNum(node->right)));
     bool flag2 = ((leftNum == 1)       || (rightNum == 1));
 
     return (flag1 && flag2);

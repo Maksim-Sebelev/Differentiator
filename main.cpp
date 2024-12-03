@@ -12,7 +12,8 @@ int main()
     const char* const inputFile = "test.txt";
     Tree_t tree = {};
 
-    tree.root = GetG();
+    const char* input = "1+1$";
+    tree.root = GetG(input);
     TEXT_DUMP(tree.root);
     TEXT_DUMP(tree.root->left);
     TEXT_DUMP(tree.root->right);
@@ -26,14 +27,14 @@ int main()
     // TREE_ASSERT(TreeCtor(&tree, buffer, bufSize));
     // GRAPHIC_DUMP(tree.root);
 
-    // TREE_ASSERT(Diff(&tree));
-    // GRAPHIC_DUMP(tree.root);
+    TREE_ASSERT(Diff(&tree));
+    GRAPHIC_DUMP(tree.root);
 
-    // TREE_ASSERT(SimplifyTree(&tree));
-    // GRAPHIC_DUMP(tree.root);
+    TREE_ASSERT(SimplifyTree(&tree));
+    GRAPHIC_DUMP(tree.root);
 
-    // TREE_ASSERT(CalcTree(&tree, 5));
-    // GRAPHIC_DUMP(tree.root);
+    TREE_ASSERT(CalcTree(&tree, 3));
+    GRAPHIC_DUMP(tree.root);
 
     TREE_ASSERT(TreeDtor(&tree, buffer));
 
