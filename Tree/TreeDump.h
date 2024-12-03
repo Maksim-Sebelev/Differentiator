@@ -1,5 +1,5 @@
-#ifndef DIFF_DUMP_H
-#define DIFF_DUMP_H
+#ifndef TREE_DUMP_H
+#define TREE_DUMP_H
 
 #include "../Tree/Tree.h"
 

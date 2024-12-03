@@ -1,6 +1,7 @@
 #include <assert.h>
 #include "Taylor.h"
 #include "../Tree/Tree.h"
+#include "../Tree/TreeDump.h"
 #include "SimplifyTree.h"
 
 static TreeErr SetXnodes(Node_t* node, Number valX);

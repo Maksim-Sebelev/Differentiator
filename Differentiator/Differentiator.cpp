@@ -5,7 +5,7 @@
 #include "../Tree/Tree.h"
 #include "../Common/ColorPrint.h"
 #include "../Common/GlobalInclude.h"
-#include "DiffDump.h"
+#include "../Tree/TreeDump.h"
 
 static TreeErr DiffNode                  (Node_t** node);
 
@@ -343,12 +343,12 @@ static TreeErr HandleDiffFunctionHelper(Node_t** node)
         case Function::ch:       TREE_ASSERT(HandleDiffCh(node));                                  break;
         case Function::th:       TREE_ASSERT(HandleDiffTh(node));                                  break;
         case Function::cth:      TREE_ASSERT(HandleDiffCth(node));                                 break;
-        case Function::arcsin:   assert(0 && "you forgot to add thia function in switch.\n");      break;
-        case Function::arccos:   assert(0 && "you forgot to add thia function in switch.\n");      break;
-        case Function::arctg:    assert(0 && "you forgot to add thia function in switch.\n");      break;
-        case Function::arcctg:   assert(0 && "you forgot to add thia function in switch.\n");      break;
+        case Function::arcsin:   assert(0 && "you forgot to add this function in switch.\n");      break;
+        case Function::arccos:   assert(0 && "you forgot to add this function in switch.\n");      break;
+        case Function::arctg:    assert(0 && "you forgot to add this function in switch.\n");      break;
+        case Function::arcctg:   assert(0 && "you forgot to add this function in switch.\n");      break;
         case Function::undefined_function: err.err = UNDEFINED_FUNCTION_TYPE;                      break;
-        default: assert(0);                                                                        break;
+        default: assert(0 && "You forgpt about some function.\n");                                 break;
     }
 
     return NODE_VERIF(*node, err);

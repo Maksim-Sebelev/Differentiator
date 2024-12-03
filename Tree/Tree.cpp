@@ -6,7 +6,7 @@
 #include "../Onegin/onegin.h"
 #include "../Common/ColorPrint.h"
 #include "../Common/GlobalInclude.h"
-#include "../Differentiator/DiffDump.h"
+#include "TreeDump.h"
 
 static bool         IsError                        (const TreeErr* err);
 
@@ -38,7 +38,6 @@ static bool         IsNull                 (const char** buffer, size_t* buffer_
 static TreeErr      NodeVerifForUnfinishedNode (const Node_t* node, TreeErr* err, const char* file, const int line, const char* func);
 static void         PrintError                 (const TreeErr* err);
 static TreeErr      AllNodeVerif               (const Node_t* node, size_t* treeSize);
-
 
 #define UNFINISHED_NODE_VERIF(node, err) NodeVerifForUnfinishedNode(node, &err, __FILE__, __LINE__, __func__)
 
@@ -224,6 +223,24 @@ TreeErr SetNode(Node_t* node, NodeArgType type, Number num, Operation oper, Func
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 
+TreeErr SwapNode(Node_t** node1, Node_t** node2)
+{
+    assert(node1);
+    assert(node2);
+
+    TreeErr err = {};
+
+    Node_t* temp = *node1;
+    *node1 = *node2;
+    *node2 = temp;
+
+    err = NODE_VERIF(*node1, err);
+    if (IsError(&err)) return err;
+    return NODE_VERIF(*node2, err);
+}
+
+//===================================== Read Tree ==================================================================================
+
 static Node_t* GetNode(const char** buffer, size_t bufSize, size_t* buffer_i)
 {
     if (IsNull(buffer, buffer_i))
@@ -270,29 +287,12 @@ static TreeErr SetNodeType(Node_t* node, const char* arg)
 
     switch (type)
     {
-        case NodeArgType::number:
-            node->data.num  = GetNumber(arg);
-            break;
-
-        case NodeArgType::operation:
-            node->data.oper = GetOperationType(arg);
-            break;
-
-        case NodeArgType::function:
-            node->data.func = GetFunctionType(arg);
-            break;
-
-        case NodeArgType::variable:
-            node->data.var  = GetVariableType(arg);
-            break;
-
-        case NodeArgType::undefined:
-            err.err = TreeErrorType::UNDEFINED_NODE_TYPE;
-            break;
-
-        default:
-            assert(0 && "You forgot about some node type in tree.cpp\n");
-            break;
+        case NodeArgType::number:     node->data.num  = GetNumber(arg);             break;
+        case NodeArgType::operation:  node->data.oper = GetOperationType(arg);      break;
+        case NodeArgType::function:   node->data.func = GetFunctionType(arg);       break;
+        case NodeArgType::variable:   node->data.var  = GetVariableType(arg);       break;
+        case NodeArgType::undefined:  err.err = TreeErrorType::UNDEFINED_NODE_TYPE; break;
+        default: assert(0 && "You forgot about some node type in tree.cpp\n");      break;
     }
     
 
@@ -554,55 +554,25 @@ static bool HasFuncLeftChildOnly(const Node_t* node)
 
 static bool IsFunction(const char* const str)
 {
-    if (strcmp(str, "ln") == 0)
-        return true;
-
-    if (strcmp(str, "sin") == 0)
-        return true;
-
-    if (strcmp(str, "cos") == 0)
-        return true;
-
-    if (strcmp(str, "tg") == 0)
-        return true;
-
-    if (strcmp(str, "ctg") == 0)
-        return true;
-
-    if (strcmp(str, "sh") == 0)
-        return true;
-
-    if (strcmp(str, "ch") == 0)
-        return true;
-
-    if (strcmp(str, "th") == 0)
-        return true;
-
-    if (strcmp(str, "cth") == 0)
-        return true;
-
-    if (strcmp(str, "arcsin") == 0)
-        return true;
-
-    if (strcmp(str, "arccos") == 0)
-        return true;
-
-    if (strcmp(str, "arctg") == 0)
-        return true;
-
-    if (strcmp(str, "arcctg") == 0)
-        return true;
-
-    if (strcmp(str, "arcsh") == 0)
-        return true;
-
-    if (strcmp(str, "arcch") == 0)
-        return true;
-
-    if (strcmp(str, "arcth") == 0)
-        return true;
-
-    if (strcmp(str, "arccth") == 0)
+    if (
+    (strcmp(str, "ln") == 0)     ||
+    (strcmp(str, "sin") == 0)    ||
+    (strcmp(str, "cos") == 0)    ||
+    (strcmp(str, "tg") == 0)     ||
+    (strcmp(str, "ctg") == 0)    ||
+    (strcmp(str, "sh") == 0)     ||
+    (strcmp(str, "ch") == 0)     ||
+    (strcmp(str, "th") == 0)     ||
+    (strcmp(str, "cth") == 0)    ||
+    (strcmp(str, "arcsin") == 0) ||
+    (strcmp(str, "arccos") == 0) ||
+    (strcmp(str, "arctg") == 0)  ||
+    (strcmp(str, "arcctg") == 0) ||
+    (strcmp(str, "arcsh") == 0)  ||
+    (strcmp(str, "arcch") == 0)  ||
+    (strcmp(str, "arcth") == 0)  ||
+    (strcmp(str, "arccth") == 0)
+    ) 
         return true;
 
     return false;
@@ -949,5 +919,210 @@ void TreeAssertPrint(TreeErr* err, const char* file, const int line, const char*
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetE();
+static Node_t* GetT();
+static Node_t* GetP();
+static Node_t* GetM();
+static Node_t* GetV();
+static Node_t* GetN();
+static Node_t* GetF();
+
+static void SyntaxError(const char* msg);
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+const char* s = "ln(x)+3*ln(x^2+1)$";
+size_t p = 0;
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static void SyntaxError(const char* msg)
+{
+    printf("syntax err in '%s' with p = %lu\n", msg, p);
+    abort();
+    return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Node_t* GetG()
+{
+    Node_t* node = GetE();
+
+    GRAPHIC_DUMP(node);
+    TEXT_DUMP(node);
+
+    if (s[p] != '$')
+    {
+        SyntaxError(__func__);
+    }
+    p++;
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetN()
+{
+    Number val = 0;
+    size_t old_p = p;
+
+    while ('0' <= s[p] && s[p] <= '9')
+    {
+        val = 10 * val + s[p] - '0';
+        p++;   
+    }
+
+    if (p == old_p)
+    {
+        SyntaxError(__func__);
+    }
+
+    Node_t* node = {};
+    _NUM(&node, val);
+
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetV()
+{
+    Node_t* node = {};
+    size_t old_p = p;
+
+    if (s[p] == 'x')
+    {
+        _VAR(&node, Variable::x);
+        p++;
+    }
+
+    if (p == old_p)
+    {
+        SyntaxError(__func__);
+    }
+
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetE()
+{
+    Node_t* node = GetT();
+    while(s[p] == '+' || s[p] == '-')
+    {
+        char op = s[p];
+        p++;
+        Node_t* node2 = GetT();
+        Node_t* new_node = {};
+
+        if (op == '+')
+            _ADD(&new_node, node, node2);
+        else
+            _SUB(&new_node, new_node, node2);
+
+        TREE_ASSERT(SwapNode(&node, &new_node));
+    }
+
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetT()
+{
+    Node_t* node = GetM();
+
+    while (s[p] == '*' || s[p] == '/')
+    {
+        char op = s[p];
+        p++;
+        Node_t* node2 = GetM();
+        Node_t* new_node = {};
+    
+        if (op == '*')
+            _MUL(&new_node, node, node2);
+        else
+            _DIV(&new_node, new_node, node2);
+
+        TREE_ASSERT(SwapNode(&node, &new_node));
+    }
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetP()
+{
+    if (s[p] == '(')
+    {
+        p++;
+        Node_t* node = GetE();
+        if (s[p] != ')')
+        {
+            SyntaxError(__func__);
+        }
+        p++;
+        return node;
+    }
+
+    if (s[p] == 'x')
+        return GetV();
+    
+    return GetN();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetM() // pow
+{
+    Node_t* node = GetF();
+    while(s[p] == '^')
+    {
+        p++;
+        Node_t* node2 = GetF();
+        Node_t* new_node = {};
+
+        _POW(&new_node, node, node2);
+        TREE_ASSERT(SwapNode(&node, &new_node));
+    }
+
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetF() // funtion
+{
+    if (strncmp(s + p, "ln(", 3) == 0)
+    {
+        p += 3;
+        Node_t* node = GetE();
+
+        GRAPHIC_DUMP(node);
+
+        if (s[p] != ')')
+        {
+            SyntaxError(__func__);
+        }
+
+        p++;
+
+        Node_t* ln_node = {};
+        _FUNC(&ln_node, Function::ln, node);
+
+        TREE_ASSERT(SwapNode(&node, &ln_node));
+
+        return node;
+    }
+
+    return GetP();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 
 #undef UNFINISHED_NODE_VERIF

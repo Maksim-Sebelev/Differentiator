@@ -3,8 +3,9 @@
 #include <string.h>
 #include "SimplifyTree.h"
 #include "../Tree/Tree.h"
-#include "../Onegin/onegin.h" // -I
-#include "DiffDump.h"
+#include "../Onegin/onegin.h"
+#include "../Tree/Tree.h"
+
 
 static TreeErr SimplifyTreeHelper                         (Node_t* node);
 static TreeErr SimplifyOperation                          (Node_t* node);
@@ -716,6 +717,11 @@ static bool IsOperationSimplifySituationGood(const Node_t* node)
     Number    secondNum  = node->right->data.num;
 
     bool flag1 = (oper != Operation::dive);
+
+    if (secondNum == 0 && !flag1)
+    {   
+        assert(0 && "Division by zero.");
+    }
 
     if (secondNum == 0)
     {
