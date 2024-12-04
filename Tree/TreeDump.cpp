@@ -27,7 +27,7 @@ static const char* GetFuncInStr       (Function func);
 
 void GraphicDump(const Node_t* node, const char* file, const int line, const char* func)
 {
-    static size_t ImgQuant = 0;
+    static size_t ImgQuant = 1;
 
     static const size_t MaxfileNameLen = 128;
     char outfile[MaxfileNameLen] = {};

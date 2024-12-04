@@ -28,9 +28,10 @@ clean:
 	rm -rf Tree/*.o
 	rm -rf *.exe
 
-clean.dot:
+cdot:
 	rm -rf *.png
 	rm -rf *.dot
 
 run:
+	make cdot
 	./$(TARGET)

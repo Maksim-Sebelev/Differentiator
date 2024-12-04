@@ -1,7 +1,9 @@
 digraph G{
 rankdir=TB
 graph [bgcolor="#000000"];
-node0x504000000090[shape=Mrecord, style=filled, fillcolor="#1692bb"label ="0", color = "#777777"];
+node0x504000000050[shape=Mrecord, style=filled, fillcolor="#168237"label ="ln", color = "#777777"];
+node0x504000000010[shape=Mrecord, style=filled, fillcolor="#9b2017"label ="x", color = "#777777"];
 edge[color="#5b5b5b"];
-place[shape=Mrecord, style=filled, fillcolor="#1771a0",label  = "Dump place:| file: main.cpp |<f0> line: 37 |<f1> func: main", color = "#000000"];
+node0x504000000050->node0x504000000010;
+place[shape=Mrecord, style=filled, fillcolor="#1771a0",label  = "Dump place:| file: main.cpp |<f0> line: 19 |<f1> func: main", color = "#000000"];
 }

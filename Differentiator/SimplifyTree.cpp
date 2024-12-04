@@ -5,6 +5,7 @@
 #include "../Tree/Tree.h"
 #include "../Onegin/onegin.h"
 #include "../Tree/Tree.h"
+#include "../Tree/TreeDump.h"
 
 
 static TreeErr SimplifyTreeHelper                         (Node_t* node);
@@ -391,12 +392,14 @@ static TreeErr HandleSimplifyLeft0Num(Node_t* node)
     {
         case Operation::mul:
         case Operation::dive:
-        case Operation::power: TREE_ASSERT(Create0NumNode(node));                break;
-        case Operation::plus:  TREE_ASSERT(SetNodeRightChild(node));             break;
-        case Operation::minus: TREE_ASSERT(NodeDtor(node->left));                break;
-        case Operation::undefined_operation: err.err = UNDEFINED_OPERATION_TYPE; break;
-        default: assert(0 && "You forgot about some operation.\n");              break;
+        case Operation::power: TREE_ASSERT(Create0NumNode(node));                                   break;
+        case Operation::plus:  TREE_ASSERT(SetNodeRightChild(node));                                break;
+        case Operation::minus: TREE_ASSERT(SwapNode(&node->left, &node->right)); FREE(node->left)   break;
+        case Operation::undefined_operation: err.err = UNDEFINED_OPERATION_TYPE;                    break;
+        default: assert(0 && "You forgot about some operation.\n");                                 break;
     }
+
+    GRAPHIC_DUMP(node);
 
     return NODE_VERIF(node, err);
 }
@@ -417,13 +420,13 @@ static TreeErr HandleSimplifyRight0Num(Node_t* node)
 
     switch (operation)
     {
-        case Operation::plus:  TREE_ASSERT(SetNodeLeftChild(node));              break;
-        case Operation::minus: TREE_ASSERT(NodeDtor(node->right));               break;
-        case Operation::mul:   TREE_ASSERT(Create0NumNode(node));                break;
-        case Operation::power: TREE_ASSERT(Create1NumNode(node));                break;
-        case Operation::dive:  err.err = TreeErrorType::DIVISION_BY_0;           break;
-        case Operation::undefined_operation: err.err = UNDEFINED_OPERATION_TYPE; break;
-        default: assert(0 && "You forgot about some operation.\n");              break;
+        case Operation::plus:  
+        case Operation::minus: TREE_ASSERT(SetNodeLeftChild(node));                break;
+        case Operation::mul:   TREE_ASSERT(Create0NumNode(node));                  break;
+        case Operation::power: TREE_ASSERT(Create1NumNode(node));                  break;
+        case Operation::dive:  err.err = TreeErrorType::DIVISION_BY_0;             break;
+        case Operation::undefined_operation: err.err = UNDEFINED_OPERATION_TYPE;   break;
+        default: assert(0 && "You forgot about some operation.\n");                break;
     }
 
     return NODE_VERIF(node, err);

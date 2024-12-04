@@ -139,7 +139,11 @@ TreeErr NodeDtor(Node_t* node)
     node->left  = nullptr;
     node->right = nullptr;
 
+    
+
     FREE(node);
+
+    assert(!node);
 
     return err;
 }
@@ -614,12 +618,13 @@ TreeErr TreeVerif(const Tree_t* tree, TreeErr* err, const char* file, const int 
 
 TreeErr NodeVerif(const Node_t* node, TreeErr* err, const char* file, const int line, const char* func)
 {
-    assert(node);
     assert(err);
     assert(file);
     assert(func);
 
     CodePlaceCtor(&err->place, file, line, func);
+
+    RETURN_IF_FALSE(node, *err);
 
     NodeArgType type = node->data.type;
 
@@ -920,24 +925,49 @@ void TreeAssertPrint(TreeErr* err, const char* file, const int line, const char*
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetE   (const char* input, size_t* pointer);
-static Node_t* GetT   (const char* input, size_t* pointer);
-static Node_t* GetP   (const char* input, size_t* pointer);
-static Node_t* GetM   (const char* input, size_t* pointer);
-static Node_t* GetV   (const char* input, size_t* pointer);
-static Node_t* GetN   (const char* input, size_t* pointer);
-static Node_t* GetF   (const char* input, size_t* pointer);
+static Node_t* GetAddSub   (const char* input, size_t* pointer);
+static Node_t* GetMulDiv   (const char* input, size_t* pointer);
+static Node_t* GetBracket   (const char* input, size_t* pointer);
+static Node_t* GetPow   (const char* input, size_t* pointer);
+static Node_t* GetVariable   (const char* input, size_t* pointer);
+static Node_t* GetNumber   (const char* input, size_t* pointer);
+static Node_t* GetFunction   (const char* input, size_t* pointer);
+
+static Node_t* GetFuncPattern(const char* input, size_t* pointer, const char* func);
+
+static Node_t* GetMinus(const char* input, size_t* pointer);
 static Node_t* GetLn  (const char* input, size_t* pointer);
 static Node_t* GetSin (const char* input, size_t* pointer);
 static Node_t* GetCos (const char* input, size_t* pointer);
+static Node_t* GetTg (const char* input, size_t* pointer);
+static Node_t* GetCtg (const char* input, size_t* pointer);
+static Node_t* GetSh (const char* input, size_t* pointer);
+static Node_t* GetCh (const char* input, size_t* pointer);
+static Node_t* GetTh (const char* input, size_t* pointer);
+static Node_t* GetCth (const char* input, size_t* pointer);
+static Node_t* GetArccos (const char* input, size_t* pointer);
+static Node_t* GetArcsin (const char* input, size_t* pointer);
+static Node_t* GetArctg (const char* input, size_t* pointer);
+static Node_t* GetArcctg (const char* input, size_t* pointer);
 
 static void SyntaxError(const char* input, size_t pointer, const char* file, const int line, const char* func);
+
+static bool IsEndSymbol           (const char* input, size_t pointer);
+static bool IsOperation           (const char* input, size_t pointer);
+static bool IsNumSymbol           (const char* input, size_t* pointer);
+static bool IsVarSymbol           (const char* input, size_t* pointer);
+static bool IsAddSub              (const char* input, size_t* pointer);
+static bool IsMulDiv              (const char* input, size_t* pointer);
+static bool IsPow                 (const char* input, size_t* pointer);
+static bool IsLeftBracket         (const char* input, size_t* pointer);
+static bool IsRightBracket        (const char* input, size_t* pointer);
+static bool IsOperationBeforeMinus(const char* input, size_t* pointer);
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static void SyntaxError(const char* input, size_t pointer, const char* file, const int line, const char* func)
 {
-    COLOR_PRINT(RED, "SyntaxErr detected in:\n");
+    COLOR_PRINT(RED, "\nSyntaxErr detected in:\n");
     PrintPlace(file, line, func);
     
     COLOR_PRINT(RED, "\nSyntaxErr:\n");
@@ -947,9 +977,107 @@ static void SyntaxError(const char* input, size_t pointer, const char* file, con
     COLOR_PRINT(CYAN, "%s%s\"\n", str, input);
     for (size_t i = 0; i < pointer + strSize; i++) printf(" ");
 
-    COLOR_PRINT(RED, "^ p = %lu\n", pointer);
-    abort();
+    COLOR_PRINT(RED, "^ p = %lu\n\n", pointer);
+
+    exit(0);
     return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsEndSymbol(const char* input, size_t pointer)
+{
+    assert(input);
+
+    return input[pointer] == '$';
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsNumSymbol(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+
+    return ('0' <= input[*pointer]) && (input[*pointer] <= '9');
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsVarSymbol(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+
+    return input[*pointer] == 'x';
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsAddSub(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+
+    return (input[*pointer] == '+') || (input[*pointer] == '-');
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsMulDiv(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+
+    return (input[*pointer] == '*') || (input[*pointer] == '/');
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsPow(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+
+    return (input[*pointer] == '^');
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsLeftBracket(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+
+    return (input[*pointer] == '(');
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsRightBracket(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+
+    return (input[*pointer] == ')');
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsOperation(const char* input, size_t pointer)
+{
+    char c = input[pointer];
+    return (c == '+') || (c == '-') || (c == '*') || (c == '/') || (c == '^');
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsOperationBeforeMinus(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+
+    return (*pointer >= 1 && IsOperation(input, *pointer - 1));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -958,15 +1086,14 @@ static void SyntaxError(const char* input, size_t pointer, const char* file, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Node_t* GetG(const char* input)
+Node_t* GetTree(const char* input)
 {
+    assert(input);
     size_t pointer = 0;
-    Node_t* node = GetE(input, &pointer);
+    Node_t* node = GetAddSub(input, &pointer);
 
-    if (input[pointer] != '$')
-    {
+    if (!IsEndSymbol(input, pointer)) 
         SYNTAX_ERR(input, pointer);
-    }
 
     pointer++;
     return node;
@@ -974,12 +1101,14 @@ Node_t* GetG(const char* input)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetN(const char* input, size_t* pointer)
+static Node_t* GetNumber(const char* input, size_t* pointer)
 {
+    assert(pointer);
+    assert(input);
     Number val = 0;
     size_t old_pointer = *pointer;
 
-    while ('0' <= input[*pointer] && input[*pointer] <= '9')
+    while (IsNumSymbol(input, pointer))
     {
         val = 10 * val + input[*pointer] - '0';
         (*pointer)++;   
@@ -995,12 +1124,14 @@ static Node_t* GetN(const char* input, size_t* pointer)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetV(const char* input, size_t* pointer)
+static Node_t* GetVariable(const char* input, size_t* pointer)
 {
+    assert(pointer);
+    assert(input);
     Node_t* node = {};
     size_t old_pointer = *pointer;
 
-    if (input[*pointer] == 'x')
+    if (IsVarSymbol(input, pointer))
     {
         _VAR(&node, Variable::x);
         (*pointer)++;
@@ -1013,20 +1144,24 @@ static Node_t* GetV(const char* input, size_t* pointer)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetE(const char* input, size_t* pointer)
+static Node_t* GetAddSub(const char* input, size_t* pointer)
 {
-    Node_t* node = GetT(input, pointer);
-    while(input[*pointer] == '+' || input[*pointer] == '-')
+    assert(pointer);
+    assert(input);
+    Node_t* node = GetMulDiv(input, pointer);
+    while(IsAddSub(input, pointer))
     {
         char op = input[*pointer];
+
         (*pointer)++;
-        Node_t* node2 = GetT(input, pointer);
+
+        Node_t* node2 = GetMulDiv(input, pointer);
         Node_t* new_node = {};
 
         if (op == '+')
             _ADD(&new_node, node, node2);
         else
-            _SUB(&new_node, new_node, node2);
+            _SUB(&new_node, node, node2);
 
         TREE_ASSERT(SwapNode(&node, &new_node));
     }
@@ -1036,21 +1171,26 @@ static Node_t* GetE(const char* input, size_t* pointer)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetT(const char* input, size_t* pointer)
+static Node_t* GetMulDiv(const char* input, size_t* pointer)
 {
-    Node_t* node = GetM(input, pointer);
+    assert(pointer);
+    assert(input);
+    Node_t* node = GetPow(input, pointer);
 
-    while (input[*pointer] == '*' || input[*pointer] == '/')
+    while (IsMulDiv(input, pointer))
     {
-        char op = input[*pointer];
+        char operation = input[*pointer];
+
         (*pointer)++;
-        Node_t* node2 = GetM(input, pointer);
+        Node_t* node2 = GetPow(input, pointer);
         Node_t* new_node = {};
     
-        if (op == '*')
+        if (operation == '*')
             _MUL(&new_node, node, node2);
-        else
-            _DIV(&new_node, new_node, node2);
+        else if (operation == '/')
+            _DIV(&new_node, node, node2);
+        else 
+            assert(0 && "not a */ operation in get mul div.");
 
         TREE_ASSERT(SwapNode(&node, &new_node));
     }
@@ -1059,38 +1199,42 @@ static Node_t* GetT(const char* input, size_t* pointer)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetP(const char* input, size_t* pointer)
+static Node_t* GetBracket(const char* input, size_t* pointer)
 {
-    if (input[*pointer] == '(')
+    assert(pointer);
+    assert(input);
+
+    if (IsLeftBracket(input, pointer))
     {
         (*pointer)++;
-        Node_t* node = GetE(input, pointer);
-        if (input[*pointer] != ')')
-        {
+        Node_t* node = GetAddSub(input, pointer);
+    
+        if (!IsRightBracket(input, pointer))
             SYNTAX_ERR(input, *pointer);
-        }
 
         (*pointer)++;
         return node;
     }
 
-    if (input[*pointer] == 'x')
-        return GetV(input, pointer);
-    
-    return GetN(input, pointer);
+    RETURN_IF_TRUE(IsVarSymbol(input, pointer), GetVariable(input, pointer));
+
+    return GetNumber(input, pointer);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetM(const char* input, size_t* pointer) // pow
+static Node_t* GetPow(const char* input, size_t* pointer) // pow
 {
-    Node_t* node = GetF(input, pointer);
-    while(input[*pointer] == '^')
+    assert(pointer);
+    assert(input);
+
+    Node_t* node = GetFunction(input, pointer);
+    while(IsPow(input, pointer))
     {
         (*pointer)++;
-        Node_t* node2 = GetF(input, pointer);
-        Node_t* new_node = {};
+        Node_t* node2 = GetFunction(input, pointer);
 
+        Node_t* new_node = {};
         _POW(&new_node, node, node2);
         TREE_ASSERT(SwapNode(&node, &new_node));
     }
@@ -1100,84 +1244,249 @@ static Node_t* GetM(const char* input, size_t* pointer) // pow
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetF(const char* input, size_t* pointer) // funtion
+#define STRNCMP(func) (strncmp(input + *pointer, func, strlen(func)) == 0)
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetFunction(const char* input, size_t* pointer) // funtion
 {
-    if (strncmp(input + *pointer, "ln(", 3) == 0)
-    {
-        return GetLn(input, pointer);
-    }
+    assert(pointer);
+    assert(input);
 
-    if (strncmp(input + *pointer, "sin(", 4) == 0)
-    {
-        return GetSin(input, pointer);
-    }
 
-    if (strncmp(input + *pointer, "cos(", 4) == 0)
-    {
-        return GetCos(input, pointer);
-    }
+    RETURN_IF_TRUE(STRNCMP("-"),      GetMinus   (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("ln"),     GetLn      (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("sin"),    GetSin     (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("cos"),    GetCos     (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("tg"),     GetTg      (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("ctg"),    GetCtg     (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("sh"),     GetSh      (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("ch"),     GetCh      (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("th"),     GetTh      (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("cth"),    GetCth     (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("arcsin"), GetArcsin  (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("arccos"), GetArccos  (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("arctg"),  GetArctg   (input, pointer));
+    RETURN_IF_TRUE(STRNCMP("arcctg"), GetArcctg  (input, pointer));
 
-    return GetP(input, pointer);
+    return GetBracket(input, pointer);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+static Node_t* GetFuncPattern(const char* input, size_t* pointer, const char* func)
+{
+    assert(input);
+    assert(pointer);
+    assert(func);
+    assert(STRNCMP(func));
+
+    Function funcType    = GetFunctionType(func);
+    size_t   funcNameLen = strlen(func);
+
+    *pointer += funcNameLen;
+
+    if (!IsLeftBracket(input, pointer))
+        SYNTAX_ERR(input, *pointer);
+
+    (*pointer)++;
+
+    Node_t* node = GetAddSub(input, pointer);
+
+    if (!IsRightBracket(input, pointer)) 
+        SYNTAX_ERR(input, *pointer);
+
+    (*pointer)++;
+
+
+    Node_t* funcNode = {};
+    _FUNC(&funcNode, funcType, node);
+
+    TREE_ASSERT(SwapNode(&funcNode, &node));
+
+    return node;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#undef STRNCMP
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static Node_t* GetLn(const char* input, size_t* pointer)
 {
-    assert(strncmp(input + *pointer, "ln(", 3) == 0);
-    *pointer += 3;
-    Node_t* node = GetE(input, pointer);
+    assert(pointer);
+    assert(input);
 
-    if (input[*pointer] != ')')
-    {
-        SYNTAX_ERR(input, *pointer);
-    }
-    (*pointer)++;
+    const char* func = "ln";
 
-    Node_t* new_node = {};
-    _FUNC(&new_node, Function::ln, node);
-
-    TREE_ASSERT(SwapNode(&node, &new_node));
-
-    return node;
+    return GetFuncPattern(input, pointer, func);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static Node_t* GetSin(const char* input, size_t* pointer)
 {
-    assert(strncmp(input + *pointer, "sin(", 4) == 0);
-    *pointer += 4;
-    Node_t* node = GetE(input, pointer);
+    assert(pointer);
+    assert(input);
 
-    if (input[*pointer] != ')')
-    {
-        SYNTAX_ERR(input, *pointer);
-    }
-    (*pointer)++;
+    const char* func = "sin";
 
-    Node_t* new_node = {};
-    _FUNC(&new_node, Function::sin, node);
-
-    TREE_ASSERT(SwapNode(&node, &new_node));
-
-    return node;
+    return GetFuncPattern(input, pointer, func);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static Node_t* GetCos(const char* input, size_t* pointer)
 {
-    assert(strncmp(input + *pointer, "cos(", 4) == 0);
-    *pointer += 4;
-    Node_t* node = GetE(input, pointer);
+    assert(pointer);
+    assert(input);
 
-    if (input[*pointer] != ')') SYNTAX_ERR(input, *pointer);
+    const char* func = "cos";
 
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetTg(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "tg";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetCtg(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "ctg";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetSh(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "sh";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetCh(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "ch";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetTh(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "th";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetCth(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "cth";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetArcsin(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "arcsin";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetArccos(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "arccos";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetArctg(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "arctg";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetArcctg(const char* input, size_t* pointer)
+{
+    assert(pointer);
+    assert(input);
+
+    const char* func = "arcctg";
+
+    return GetFuncPattern(input, pointer, func);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static Node_t* GetMinus(const char* input, size_t* pointer)
+{
+    assert(input);
+    assert(pointer);
+    assert(input[*pointer] == '-');
+
+    if (IsOperationBeforeMinus(input, pointer)) SYNTAX_ERR(input, *pointer);
     (*pointer)++;
 
+    size_t old_pointer = *pointer;
+
+    Node_t* node = GetMulDiv(input, pointer);
+
+    if (old_pointer == *pointer) SYNTAX_ERR(input, *pointer);
+
     Node_t* new_node = {};
-    _FUNC(&new_node, Function::cos, node);
+    _SUB(&new_node, node, nullptr);
 
     TREE_ASSERT(SwapNode(&node, &new_node));
 
