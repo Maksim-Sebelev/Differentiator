@@ -75,9 +75,6 @@ Token_t* ReadInputStr(const char* input, size_t* tokenArrSize)
     tokenArr = (Token_t*) realloc(tokenArr, *tokenArrSize * sizeof(Token_t));
     assert(tokenArr);
 
-
-    // COLOR_PRINT(YELLOW, "slen = %lu\n p.ip = %lu\n", inputLen, pointer.ip);
-
     return tokenArr;
 }
 

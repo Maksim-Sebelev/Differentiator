@@ -115,11 +115,7 @@ static Node_t* GetVariable(const Token_t* token, size_t* tp)
 {
     assert(tp);
     assert(token);
-    static size_t variableQuant = 0;
     
-    COLOR_PRINT(WHITE, "in get variable comes token[%lu];\n", *tp);
-    COLOR_PRINT(WHITE, "variable = '%c';\n\n", token[*tp].data.variable);
-
     if (!IsTokenVariable(token, tp))
         SYNTAX_ERR(&token[*tp]);
 
@@ -129,10 +125,6 @@ static Node_t* GetVariable(const Token_t* token, size_t* tp)
 
     Node_t* node = {};
     _VAR(&node, variable);
-
-    variableQuant++;
-
-    COLOR_PRINT(YELLOW, "variable quant = %lu\n", variableQuant);
 
     return node;
 }

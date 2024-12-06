@@ -143,19 +143,45 @@ TreeErr NodeCopy(Node_t** copy, const Node_t* node)
     TreeErr err = {};
 
     NodeArgType type = node->type;
-    Number      number    = node->data.num;
-    Operation   operation = node->data.oper;
-    Function    function  = node->data.func;
-    Variable    variable  = node->data.var;
+    Node_t* left     = node->left;
+    Node_t* right    = node->right;
 
     switch (type)
     {
-        case NodeArgType::number:    TREE_ASSERT(NodeCtor(copy, type, &number,    node->left, node->right)); break;
-        case NodeArgType::variable:  TREE_ASSERT(NodeCtor(copy, type, &variable,  node->left, node->right)); break;
-        case NodeArgType::operation: TREE_ASSERT(NodeCtor(copy, type, &operation, node->left, node->right)); break;
-        case NodeArgType::function:  TREE_ASSERT(NodeCtor(copy, type, &function,  node->left, node->right)); break;
+        case NodeArgType::number:
+        {
+            Number number = node->data.num;
+            TREE_ASSERT(NodeCtor(copy, type, &number, left, right));
+            break;
+        }
+
+        case NodeArgType::variable:  
+        {
+            Variable variable = node->data.var;
+            TREE_ASSERT(NodeCtor(copy, type, &variable,  left, right));
+            break;
+        }
+
+        case NodeArgType::operation: 
+        {
+            Operation operation = node->data.oper;
+            TREE_ASSERT(NodeCtor(copy, type, &operation, left, right));
+            break;
+        }
+
+        case NodeArgType::function:  
+        {
+            Function function = node->data.func;
+            TREE_ASSERT(NodeCtor(copy, type, &function,  left, right));
+            break;
+        }
+
         case NodeArgType::undefined:
-        default:  err.err = TreeErrorType::NODE_NULL; return NODE_VERIF(node, err);
+        default:
+        {
+            err.err = TreeErrorType::NODE_NULL;
+            return NODE_VERIF(node, err);
+        }
     }
 
     if (*copy == nullptr)
@@ -186,20 +212,37 @@ TreeErr NodeSetCopy(Node_t* copy, const Node_t* node)
     TreeErr err = {};
 
     NodeArgType type       = node->type;
-    Number      number     = node->data.num;
-    Operation   operation  = node->data.oper;
-    Function    function   = node->data.func;
-    Variable    variable   = node->data.var;
+    
     Node_t*     left       = node->left;
     Node_t*     right      = node->right;
 
 
     switch (type)
     {
-        case NodeArgType::number:    TREE_ASSERT(SetNode(copy, type, &number,    left, right)); break;
-        case NodeArgType::variable:  TREE_ASSERT(SetNode(copy, type, &variable,  left, right)); break;
-        case NodeArgType::operation: TREE_ASSERT(SetNode(copy, type, &operation, left, right)); break;
-        case NodeArgType::function:  TREE_ASSERT(SetNode(copy, type, &function,  left, right)); break;
+        case NodeArgType::number:
+        {
+            Number number = node->data.num;
+            TREE_ASSERT(SetNode(copy, type, &number, left, right));
+            break;
+        }
+        case NodeArgType::variable:  
+        {
+            Variable variable = node->data.var;
+            TREE_ASSERT(SetNode(copy, type, &variable,  left, right));
+            break;
+        }
+        case NodeArgType::operation: 
+        {
+            Operation operation = node->data.oper;
+            TREE_ASSERT(SetNode(copy, type, &operation, left, right));
+            break;
+        }
+        case NodeArgType::function:  
+        {
+            Function function = node->data.func;
+            TREE_ASSERT(SetNode(copy, type, &function,  left, right));
+            break;
+        }
         case NodeArgType::undefined:
         default:  err.err = TreeErrorType::NODE_NULL; return NODE_VERIF(node, err);
     }
@@ -216,14 +259,17 @@ TreeErr SetNode(Node_t* node, NodeArgType type, void* value, Node_t* left, Node_
     TreeErr err = {};
     NODE_RETURN_IF_ERR(node, err);
 
+    node->left  = left;
+    node->right = right;
+
     node->type = type;
 
     switch (type)
     {
-        case NodeArgType::number:    node->data.num  = *(Number*)    value;
-        case NodeArgType::variable:  node->data.var  = *(Variable*)  value;
-        case NodeArgType::operation: node->data.oper = *(Operation*) value;
-        case NodeArgType::function:  node->data.func = *(Function*)  value;
+        case NodeArgType::number:    node->data.num  = *(Number*)    value;     break;
+        case NodeArgType::variable:  node->data.var  = *(Variable*)  value;     break;
+        case NodeArgType::operation: node->data.oper = *(Operation*) value;     break;
+        case NodeArgType::function:  node->data.func = *(Function*)  value;     break;
         case NodeArgType::undefined:
         default: node->type = undefined; err.err = TreeErrorType::NODE_NULL; return NODE_VERIF(node, err);
     }

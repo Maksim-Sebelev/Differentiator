@@ -136,38 +136,38 @@ TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* fi
 
 #define FREE(ptr) free((char*)ptr); ptr = nullptr
 
-#define _NUM(  node, val           ) { Number    num   = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::number,    &num,   nullptr, nullptr)); }
-#define _FUNC( node, val, left     ) { Function  func  = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::function,  &func,  left,    nullptr)); }
-#define _VAR(  node, val           ) { Variable  var   = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::variable,  &var,   nullptr, nullptr)); }
-#define _OPER( node, val           ) { Operation oper  = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper,  nullptr, nullptr)); }
+#define _NUM(  node, val           ) do { static Number    num   = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::number,    &num,   nullptr, nullptr)); } while(0)
+#define _FUNC( node, val, left     ) do { static Function  func  = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::function,  &func,  left,    nullptr)); } while(0)
+#define _VAR(  node, val           ) do { static Variable  var   = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::variable,  &var,   nullptr, nullptr)); } while(0)
+#define _OPER( node, val           ) do { static Operation oper  = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper,  nullptr, nullptr)); } while(0)
 
-#define _SET_NUM(  node, val       ) { Number    num  = val;               TREE_ASSERT(SetNode (node, NodeArgType::number,     &num,  nullptr, nullptr)); }
-#define _SET_FUNC( node, val, left ) { Function  func = val;               TREE_ASSERT(SetNode (node, NodeArgType::function,   &func, left,    nullptr)); }
-#define _SET_VAR(  node, val       ) { Variable  var  = val;               TREE_ASSERT(SetNode (node, NodeArgType::variable,   &var,  nullptr, nullptr)); }
-#define _SET_OPER( node, val       ) { Operation oper = val;               TREE_ASSERT(SetNode (node, NodeArgType::operation,  &oper, nullptr, nullptr)); }
+#define _SET_NUM(  node, val       ) do { static Number    num  = val;               TREE_ASSERT(SetNode (node, NodeArgType::number,     &num,  nullptr, nullptr)); } while(0)
+#define _SET_FUNC( node, val, left ) do { static Function  func = val;               TREE_ASSERT(SetNode (node, NodeArgType::function,   &func, left,    nullptr)); } while(0)
+#define _SET_VAR(  node, val       ) do { static Variable  var  = val;               TREE_ASSERT(SetNode (node, NodeArgType::variable,   &var,  nullptr, nullptr)); } while(0)
+#define _SET_OPER( node, val       ) do { static Operation oper = val;               TREE_ASSERT(SetNode (node, NodeArgType::operation,  &oper, nullptr, nullptr)); } while(0)
 
-#define _SET_FUNC_ONLY( node, val  ) { Function  func = val;               TREE_ASSERT(SetNode (node, NodeArgType::function,  &func, (node)->left, (node)->right)); }
-#define _SET_OPER_ONLY( node, val  ) { Operation oper = val;               TREE_ASSERT(SetNode (node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
+#define _SET_FUNC_ONLY( node, val  ) do { static Function  func = val;               TREE_ASSERT(SetNode (node, NodeArgType::function,  &func, (node)->left, (node)->right)); } while(0)
+#define _SET_OPER_ONLY( node, val  ) do { static Operation oper = val;               TREE_ASSERT(SetNode (node, NodeArgType::operation, &oper, (node)->left, (node)->right)); } while(0)
 
-#define _MUL( node, left, right    ) { Operation oper = Operation::mul;    TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
-#define _DIV( node, left, right    ) { Operation oper = Operation::dive;   TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
-#define _ADD( node, left, right    ) { Operation oper = Operation::plus;   TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
-#define _SUB( node, left, right    ) { Operation oper = Operation::minus;  TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
-#define _POW( node, left, right    ) { Operation oper = Operation::power;  TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
-
-
-#define _SET_MUL( node, left, right    ) { Operation oper = Operation::mul;    TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
-#define _SET_DIV( node, left, right    ) { Operation oper = Operation::dive;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
-#define _SET_ADD( node, left, right    ) { Operation oper = Operation::plus;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
-#define _SET_SUB( node, left, right    ) { Operation oper = Operation::minus;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
-#define _SET_POW( node, left, right    ) { Operation oper = Operation::power;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
+#define _MUL( node, left, right    ) do { static Operation oper = Operation::mul;    TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); } while(0)
+#define _DIV( node, left, right    ) do { static Operation oper = Operation::dive;   TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); } while(0)
+#define _ADD( node, left, right    ) do { static Operation oper = Operation::plus;   TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); } while(0)
+#define _SUB( node, left, right    ) do { static Operation oper = Operation::minus;  TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); } while(0)
+#define _POW( node, left, right    ) do { static Operation oper = Operation::power;  TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); } while(0)
 
 
-#define _SET_MUL_ONLY( node            ) { Operation oper = Operation::mul;    TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
-#define _SET_DIV_ONLY( node            ) { Operation oper = Operation::dive;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
-#define _SET_ADD_ONLY( node            ) { Operation oper = Operation::plus;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
-#define _SET_SUB_ONLY( node            ) { Operation oper = Operation::minus;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
-#define _SET_POW_ONLY( node            ) { Operation oper = Operation::power;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
+#define _SET_MUL( node, left, right    ) do { static Operation oper = Operation::mul;    TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); } while(0)
+#define _SET_DIV( node, left, right    ) do { static Operation oper = Operation::dive;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); } while(0)
+#define _SET_ADD( node, left, right    ) do { static Operation oper = Operation::plus;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); } while(0)
+#define _SET_SUB( node, left, right    ) do { static Operation oper = Operation::minus;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); } while(0)
+#define _SET_POW( node, left, right    ) do { static Operation oper = Operation::power;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); } while(0)
+
+
+#define _SET_MUL_ONLY( node            ) do { static Operation oper = Operation::mul;    TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); } while(0)
+#define _SET_DIV_ONLY( node            ) do { static Operation oper = Operation::dive;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); } while(0)
+#define _SET_ADD_ONLY( node            ) do { static Operation oper = Operation::plus;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); } while(0)
+#define _SET_SUB_ONLY( node            ) do { static Operation oper = Operation::minus;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); } while(0)
+#define _SET_POW_ONLY( node            ) do { static Operation oper = Operation::power;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); } while(0)
 
 ;
 #define TREE_VERIF(TreePtr, Err) TreeVerif(TreePtr, &Err, __FILE__, __LINE__, __func__)

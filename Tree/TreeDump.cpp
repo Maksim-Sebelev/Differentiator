@@ -189,7 +189,7 @@ static void GraphicDumpHelper(const Node_t* node, const char* dotFileName, const
 
     DotNodeBegin(dotFile);
 
-    DotCreateDumpPlace(dotFile, file, line, func);
+    // DotCreateDumpPlace(dotFile, file, line, func);
 
     DotCreateAllNodes(dotFile, node);
     DotCreateEdges(dotFile, node);

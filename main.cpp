@@ -11,7 +11,7 @@ int main()
 {
     Tree_t tree = {};
 
-    const char* input = "x+2+x+3*sin(x+4)*5$";
+    const char* input = "3*cos(x+4)*5$";
 
     TREE_ASSERT(TreeCtor(&tree, input));
 
