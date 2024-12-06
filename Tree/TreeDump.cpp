@@ -3,12 +3,22 @@
 #include <assert.h>
 #include "TreeDump.h"
 #include "Tree.h"
+#include "Token.h"
 
 
-static void DotBegin              (FILE* dotFile);
+static void TokenDumpHelper(const Token_t* tokenArr, size_t arrSize, const char* dotFileName, const char* file, const int line, const char* func);
+
+static void DotTokenBegin    (FILE* dotFile);
+static void CreateAllTokens  (const Token_t* tokenArr, size_t arrSize, FILE* dotFile);
+static void CreateToken      (const Token_t* token,    size_t pointer, FILE* dotFile);
+
+static const char* GetTokenColor     (const Token_t* token);
+static const char* GetTokenTypeInStr (const Token_t* token);
+static const char* GetTokenDataInStr (const Token_t* token);
+
+
+static void DotNodeBegin          (FILE* dotFile);
 static void DotEnd                (FILE* dotFile);
-// static void DotBeginSubGraph1     (FILE* dotFile);
-// static void DotBeginSubGraph2     (FILE* dotFile);
 static void DotCreateAllNodes     (FILE* dotFile, const Node_t* node);
 static void DotCreateEdges        (FILE* dotFile, const Node_t* node);
 static void DotCreateEdgesHelper  (FILE* dotFile, const Node_t* node);
@@ -23,15 +33,138 @@ static const char* GetOperationInStr  (Operation oper);
 static const char* GetFuncInStr       (Function func);
 
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void TokenDump(const Token_t* tokenArr, size_t arrSize, const char* file, const int line, const char* func)
+{
+    static size_t ImgQuant = 1;
+
+    static const size_t MaxFileNameLen = 128;
+    char outfile[MaxFileNameLen] = {};
+    sprintf(outfile, "tokens%lu.png", ImgQuant);
+    ImgQuant++;
+
+    static const size_t MaxCommandLen = 256;
+    char command[MaxCommandLen] = {};
+    static const char* dotFileName = "token.dot";
+    sprintf(command, "dot -Tpng %s > %s", dotFileName, outfile);
+
+    TokenDumpHelper(tokenArr, arrSize, dotFileName, file, line, func);
+    system(command);
+
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static void TokenDumpHelper(const Token_t* tokenArr, size_t arrSize, const char* dotFileName, const char* file, const int line, const char* func)
+{
+    assert(tokenArr);
+    assert(file);
+    assert(func);
+
+    FILE* dotFile = fopen(dotFileName, "w");
+    assert(dotFile);
+
+    DotTokenBegin(dotFile);
+    DotCreateDumpPlace(dotFile, file, line, func);
+
+    CreateAllTokens(tokenArr, arrSize, dotFile);
+    DotEnd(dotFile);
+
+    fclose(dotFile);
+
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static void DotTokenBegin(FILE* dotFile)
+{
+    assert(dotFile);
+    fprintf(dotFile, "digraph G{\nrankdir=TB\ngraph [bgcolor=\"#000000\"];\n");
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static void CreateAllTokens(const Token_t* tokenArr, size_t arrSize, FILE* dotFile)
+{
+    assert(tokenArr);
+    assert(dotFile);
+
+    for (size_t i = 0; i < arrSize; i++)
+    {
+        CreateToken(&tokenArr[i], i, dotFile);
+    }
+
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static void CreateToken(const Token_t* token, size_t pointer, FILE* dotFile)
+{
+    assert(dotFile);
+
+    if (!token)
+    {
+        fprintf(dotFile, "token%lu", pointer);
+        fprintf(dotFile, "[shape=Mrecord, style=filled, fillcolor=\"#0125fe\", ");
+        fprintf(dotFile, "label = \"nullptr\"");
+        fprintf(dotFile, "color = \"#777777\"];\n");
+        return;
+    }
+
+    const char* tokenColor = GetTokenColor(token);
+
+    assert(tokenColor);
+
+    TokenType type = token->type;
+
+    fprintf(dotFile, "token%lu", pointer);
+    fprintf(dotFile, "[shape=Mrecord, style=filled, fillcolor=\"%s\",", tokenColor);
+
+    const char* tokenType = GetTokenTypeInStr(token);
+    assert(tokenType);
+
+    fprintf(dotFile, "label = \" { %s | ", tokenType);
+    // fprintf(dotFile, "label = \"");
+
+
+
+    if (type == TokenType::Number_t)
+    {
+        fprintf(dotFile, "%d | ", token->data.number);
+    }
+
+    else
+    {
+        const char* tokenData  = GetTokenDataInStr(token);
+        assert(tokenData);
+        fprintf(dotFile, "%s | ", tokenData);
+    }
+
+    fprintf(dotFile, " token[%lu] } \"", pointer);
+
+    fprintf(dotFile, "color = \"#777777\"];\n");
+
+    return;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void GraphicDump(const Node_t* node, const char* file, const int line, const char* func)
 {
+    assert(node);
+    assert(file);
+    assert(func);
+
     static size_t ImgQuant = 1;
 
     static const size_t MaxfileNameLen = 128;
     char outfile[MaxfileNameLen] = {};
-    sprintf(outfile, "out%lu.png", ImgQuant);
+    sprintf(outfile, "tree%lu.png", ImgQuant);
     ImgQuant++;
 
     static const size_t MaxCommandLen = 256;
@@ -45,7 +178,7 @@ void GraphicDump(const Node_t* node, const char* file, const int line, const cha
     return;
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static void GraphicDumpHelper(const Node_t* node, const char* dotFileName, const char* file, const int line, const char* func)
 {
@@ -54,19 +187,12 @@ static void GraphicDumpHelper(const Node_t* node, const char* dotFileName, const
     FILE* dotFile = fopen(dotFileName, "w");
     assert(dotFile);
 
-    DotBegin(dotFile);
+    DotNodeBegin(dotFile);
 
-    // DotBeginSubGraph1(dotFile);
+    DotCreateDumpPlace(dotFile, file, line, func);
 
     DotCreateAllNodes(dotFile, node);
     DotCreateEdges(dotFile, node);
-
-    // DotEnd(dotFile);
-
-    // DotBeginSubGraph2(dotFile);
-    DotCreateDumpPlace(dotFile, file, line, func);
-    // DotEnd(dotFile);
-
 
     DotEnd(dotFile);
 
@@ -76,35 +202,15 @@ static void GraphicDumpHelper(const Node_t* node, const char* dotFileName, const
     return;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static void DotBegin(FILE* dotFile)
+static void DotNodeBegin(FILE* dotFile)
 {
     assert(dotFile);
-    // fprintf(dotFile, "digraph G{\ngraph [bgcolor=\"#000000\"];\n");
     fprintf(dotFile, "digraph G{\nrankdir=TB\ngraph [bgcolor=\"#000000\"];\n");
     return;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-
-// static void DotBeginSubGraph1(FILE* dotFile)
-// {
-//     assert(dotFile);
-//     fprintf(dotFile, "subgraph sg1{\nrankdir=TB;\ngraph [];\n");
-//     return;
-// }
-
-// //----------------------------------------------------------------------------------------------------------------------
-
-// static void DotBeginSubGraph2(FILE* dotFile)
-// {
-//     assert(dotFile);
-//     fprintf(dotFile, "subgraph sg2{\nrankdir=LR;\ngraph [];\n");
-//     return;
-// }
-
-// //----------------------------------------------------------------------------------------------------------------------
 
 static void DotEnd(FILE* dotFile)
 {
@@ -113,7 +219,7 @@ static void DotEnd(FILE* dotFile)
     return;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static void DotCreateAllNodes(FILE* dotFile, const Node_t* node)
 {
@@ -125,7 +231,7 @@ static void DotCreateAllNodes(FILE* dotFile, const Node_t* node)
     fprintf(dotFile, "node%p", node);
     fprintf(dotFile, "[shape=Mrecord, style=filled, fillcolor=\"%s\"", nodeColor);
 
-    NodeArgType type = node->data.type;
+    NodeArgType type = node->type;
 
     if (type == NodeArgType::number)
     {
@@ -140,7 +246,6 @@ static void DotCreateAllNodes(FILE* dotFile, const Node_t* node)
 
     fprintf(dotFile, "color = \"#777777\"];\n");
 
-
     if (node->left)
     {
         DotCreateAllNodes(dotFile, node->left);
@@ -154,7 +259,7 @@ static void DotCreateAllNodes(FILE* dotFile, const Node_t* node)
     return;
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static void DotCreateEdges(FILE* dotFile, const Node_t* node)
 {
@@ -167,7 +272,7 @@ static void DotCreateEdges(FILE* dotFile, const Node_t* node)
     return;
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static void DotCreateEdgesHelper(FILE* dotFile, const Node_t* node)
 {
@@ -191,66 +296,38 @@ static void DotCreateEdgesHelper(FILE* dotFile, const Node_t* node)
     return;
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static void DotCreateDumpPlace(FILE* dotFile, const char* file, const int line, const char* func)
 {
     assert(dotFile);
+    assert(file);
+    assert(func);
 
     fprintf(dotFile, "place");
-    fprintf(dotFile, "[shape=Mrecord, style=filled, fillcolor=\"#1771a0\",");
-    fprintf(dotFile, "label  = \"Dump place:");
-    fprintf(dotFile, "| file: %s ",     file);
-    fprintf(dotFile, "|<f0> line: %d ",  line);
-    fprintf(dotFile, "|<f1> func: %s\", ", func);
+    fprintf(dotFile, "[shape=Mrecord, style=filled, fillcolor=\"#1771a0\", pos=\"0,1!\",");
+    fprintf(dotFile, "label = \" { Dump place: | file: [%s] | line: [%d] | func: [%s] | autor: Maksimka | I'm not gay } \"", file, line, func);
     fprintf(dotFile, "color = \"#000000\"];\n");
 
     return;
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static const char* GetTypeColor(const Node_t* node)
 {
-    NodeArgType type = node->data.type;
+    NodeArgType type = node->type;
 
     switch (type)
     {
-        case NodeArgType::number:
-        {
-            return "#1692bb";
-            break;
-        }
-
-        case NodeArgType::operation:
-        {
-            return "#168237";
-            break;
-        }
-
-        case NodeArgType::variable:
-        {
-            return "#9b2017";
-            break;
-        }
-
-        case NodeArgType::function:
-        {
-            return "#168237";
-            break;
-        }
-
-        case NodeArgType::undefined:
-        {
-            return "red";
-            break;
-        }
-
+        case NodeArgType::number:    return "#1cb9ff";
+        case NodeArgType::operation: return "#00ca2c";
+        case NodeArgType::variable:  return "#f31807";
+        case NodeArgType::function:  return "#0cf108";
+        case NodeArgType::undefined: return "red";
         default:
-        {
             assert(0 && "undefined situation in GetColorType.\n");
             break;
-        }
     }
 
     assert(0 && "undefined situation in GetColorType.\n");
@@ -258,35 +335,30 @@ static const char* GetTypeColor(const Node_t* node)
     return "red";    
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static const char* GetNodeTypeInStr(const Node_t* node)
 {
     assert(node);
 
-    NodeArgType type = node->data.type;
+    NodeArgType type = node->type;
 
     switch (type)
     {
         case NodeArgType::number:
             return "number";
-            break;
 
         case NodeArgType::operation:
             return "operation";
-            break;
 
         case NodeArgType::function:
             return "function";
-            break;
 
         case NodeArgType::variable:
             return "variable";
-            break;
 
         case NodeArgType::undefined:
             return "undefined";
-            break;
 
         default:
             assert(0 && "You forgot about some node type in text dump.\n");
@@ -296,77 +368,60 @@ static const char* GetNodeTypeInStr(const Node_t* node)
     return "wtf?";
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static const char* GetNodeArgInStr(const Node_t* node)
 {
     assert(node);
-    NodeArgType type = node->data.type;
+    NodeArgType type = node->type;
 
     switch (type)
     {
         case NodeArgType::number:
-        {
+        {        
             assert(0 && "Number is drugaya situation.\n");
             return "undefined";
-            break;
         }
 
         case NodeArgType::operation:
         {
             Operation oper = node->data.oper;
             return GetOperationInStr(oper);
-            break;
         }
 
         case NodeArgType::function:
         {
             Function func = node->data.func;
             return GetFuncInStr(func);
-            break;
-
         }
 
         case NodeArgType::variable:
         {
             Variable var = node->data.var;
             return GetVariableInStr(var);
-            break;
         }
 
         case NodeArgType::undefined:
-        {
             return "undefined node type.";
-            break;
-        }
 
         default:
-        {
-            assert(0 && "you forgot about some node type.\n");
-            return nullptr;
-            break;
-        }
+            assert(0 && "you forgot about some node type.");
+            return "undefined";
     }
 
     assert(0 && "you forgot about some node type.\n");
-    return nullptr;
+    return "undefined";
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static const char* GetVariableInStr(Variable var)
 {
     switch (var)
     {
-        case Variable::x:
-            return "x";
-
-        case Variable::y:
-            return "y";
-
-        case Variable::undefined_variable:
-            return "undefined";
-
+        case Variable::x: return "x";
+        case Variable::y: return "y";
+        case Variable::undefined_variable: return "undefined";
         default:
             assert(0 && "You forgot about some variable name in graphic dump.\n");
             return "undefined";
@@ -376,7 +431,7 @@ static const char* GetVariableInStr(Variable var)
     return "wtf?";
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static const char* GetOperationInStr(Operation oper)
 {
@@ -395,7 +450,7 @@ static const char* GetOperationInStr(Operation oper)
     return "wtf?";
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static const char* GetFuncInStr(Function func)
 {
@@ -422,7 +477,7 @@ static const char* GetFuncInStr(Function func)
     return "wtf?";
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void PrintAllNodeInfo(const Node_t* node, const char* file, const int line, const char* func)
 {
@@ -444,7 +499,7 @@ void PrintAllNodeInfo(const Node_t* node, const char* file, const int line, cons
 
     COLOR_PRINT(CYAN,  "type  = '%s'\n",   GetNodeTypeInStr  (node));
 
-    if (node->data.type == NodeArgType::number)
+    if (node->type == NodeArgType::number)
         COLOR_PRINT(CYAN, "arg   = '%d'\n\n", node->data.num);
     else
         COLOR_PRINT(CYAN, "arg   = '%s'\n\n", GetNodeArgInStr(node));
@@ -460,3 +515,117 @@ void PrintAllNodeInfo(const Node_t* node, const char* file, const int line, cons
     printf("\n\n");
     return;
 }
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static const char* GetTokenColor(const Token_t* token)
+{
+    assert(token);
+
+    TokenType type = token->type;
+
+    switch (type)
+    {
+        case TokenType::Number_t:      return "#1cb9ff";
+        case TokenType::Variable_t:    return "#f31807";
+        case TokenType::Operation_t:   return "#00ca2c";
+        case TokenType::Function_t:    return "#0cf108";
+        case TokenType::Bracket_t:     return "#e69c0c";
+        case TokenType::EndSymbol_t:   return "#ffffff";
+        default: assert(0 && "undefined token type."); break; 
+    }
+
+    assert(0 && "we must not be here");
+    return "wtf";
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static const char* GetTokenTypeInStr(const Token_t* token)
+{
+    assert(token);
+
+    TokenType type = token->type;
+
+    switch (type)
+    {
+        case TokenType::Number_t:    return "number";
+        case TokenType::Variable_t:  return "variable";
+        case TokenType::Operation_t: return "operation";
+        case TokenType::Function_t:  return "function";
+        case TokenType::Bracket_t:   return "bracket";
+        case TokenType::EndSymbol_t: return "end";
+        default: assert(0 && "nudefindef type."); return "undefined";
+    }
+
+    return "undefined";
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static const char* GetTokenDataInStr(const Token_t* token)
+{
+    assert(token);
+    TokenType type = token->type;
+
+    switch (type)
+    {
+        case TokenType::Number_t:
+        {    
+            assert(0 && "Number is drugaja situation.");
+            return "undefined";
+        }
+
+        case TokenType::Variable_t:
+        {
+            Variable variable = token->data.variable;
+            switch (variable)
+            {
+                case Variable::x: return "x";
+                case Variable::y: return "y";
+                case Variable::undefined_variable:
+                default: assert(0 && "undefined variable."); break;
+            }
+            break;
+        }
+    
+        case TokenType::Operation_t:
+        {
+            Operation operation = token->data.operation;
+            return GetOperationInStr(operation); //
+        }
+        case TokenType::Function_t:
+        {
+            Function function = token->data.function;
+            return GetFuncInStr(function); //
+        }
+         
+        case TokenType::Bracket_t:
+        {
+            Bracket bracket = token->data.bracket;
+            switch (bracket)
+            {
+                case Bracket::left: return "(";
+                case Bracket::right: return ")";
+                default: assert(0 && "undefined bracket type."); break;
+            }
+            break;
+        }
+    
+        case TokenType::EndSymbol_t:
+        {
+            EndSymbol end = token->data.end;
+            switch (end)
+            {
+                case EndSymbol::end: return "$";
+                default: assert(0 && "undefined end syn=mbol.");
+            }
+            break;
+        }
+        default: assert(0 && "undefined type."); return "undefined";
+    }
+
+    return "undefined";
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

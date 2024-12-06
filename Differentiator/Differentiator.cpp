@@ -3,9 +3,9 @@
 #include <string.h>
 #include "Differentiator.h"
 #include "../Tree/Tree.h"
+#include "../Tree/TreeDump.h"
 #include "../Common/ColorPrint.h"
 #include "../Common/GlobalInclude.h"
-#include "../Tree/TreeDump.h"
 
 static TreeErr DiffNode                  (Node_t** node);
 
@@ -55,7 +55,7 @@ static TreeErr DiffNode(Node_t** node)
 
     TreeErr err = {};
 
-    NodeArgType type = (*node)->data.type;
+    NodeArgType type = (*node)->type;
 
     switch (type)
     {
@@ -230,9 +230,6 @@ static TreeErr HandleDiffDiv(Node_t** node)
 
     _L  = new_left;
     _R = new_right;
-
-    // GRAPHIC_DUMP(*node);
-    // TEXT_DUMP(*node);
 
     return NODE_VERIF(*node, err);
 }

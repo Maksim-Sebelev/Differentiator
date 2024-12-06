@@ -32,7 +32,7 @@ static TreeErr SetXnodes(Node_t* node, Number valX)
     if (node->left)  TREE_ASSERT(SetXnodes(node->left,  valX));
     if (node->right) TREE_ASSERT(SetXnodes(node->right, valX));
 
-    NodeArgType type = node->data.type;
+    NodeArgType type = node->type;
 
     if (type == NodeArgType::variable)
     {

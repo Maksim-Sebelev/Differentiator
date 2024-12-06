@@ -1,9 +1,33 @@
 digraph G{
 rankdir=TB
 graph [bgcolor="#000000"];
-node0x504000000050[shape=Mrecord, style=filled, fillcolor="#168237"label ="ln", color = "#777777"];
-node0x504000000010[shape=Mrecord, style=filled, fillcolor="#9b2017"label ="x", color = "#777777"];
+place[shape=Mrecord, style=filled, fillcolor="#1771a0", pos="0,1!",label = " { Dump place: | file: [main.cpp] | line: [18] | func: [main] | autor: Maksimka | I'm not gay } "color = "#000000"];
+node0x5030000002b0[shape=Mrecord, style=filled, fillcolor="#00ca2c"label ="+", color = "#777777"];
+node0x503000000100[shape=Mrecord, style=filled, fillcolor="#00ca2c"label ="+", color = "#777777"];
+node0x5030000000a0[shape=Mrecord, style=filled, fillcolor="#00ca2c"label ="+", color = "#777777"];
+node0x503000000040[shape=Mrecord, style=filled, fillcolor="#f31807"label ="x", color = "#777777"];
+node0x503000000070[shape=Mrecord, style=filled, fillcolor="#1cb9ff"label ="2", color = "#777777"];
+node0x5030000000d0[shape=Mrecord, style=filled, fillcolor="#f31807"label ="x", color = "#777777"];
+node0x503000000280[shape=Mrecord, style=filled, fillcolor="#00ca2c"label ="*", color = "#777777"];
+node0x503000000220[shape=Mrecord, style=filled, fillcolor="#00ca2c"label ="*", color = "#777777"];
+node0x503000000130[shape=Mrecord, style=filled, fillcolor="#1cb9ff"label ="3", color = "#777777"];
+node0x5030000001f0[shape=Mrecord, style=filled, fillcolor="#0cf108"label ="sin", color = "#777777"];
+node0x5030000001c0[shape=Mrecord, style=filled, fillcolor="#00ca2c"label ="+", color = "#777777"];
+node0x503000000160[shape=Mrecord, style=filled, fillcolor="#f31807"label ="x", color = "#777777"];
+node0x503000000190[shape=Mrecord, style=filled, fillcolor="#1cb9ff"label ="4", color = "#777777"];
+node0x503000000250[shape=Mrecord, style=filled, fillcolor="#1cb9ff"label ="5", color = "#777777"];
 edge[color="#5b5b5b"];
-node0x504000000050->node0x504000000010;
-place[shape=Mrecord, style=filled, fillcolor="#1771a0",label  = "Dump place:| file: main.cpp |<f0> line: 19 |<f1> func: main", color = "#000000"];
+node0x5030000002b0->node0x503000000100;
+node0x503000000100->node0x5030000000a0;
+node0x5030000000a0->node0x503000000040;
+node0x5030000000a0->node0x503000000070;
+node0x503000000100->node0x5030000000d0;
+node0x5030000002b0->node0x503000000280;
+node0x503000000280->node0x503000000220;
+node0x503000000220->node0x503000000130;
+node0x503000000220->node0x5030000001f0;
+node0x5030000001f0->node0x5030000001c0;
+node0x5030000001c0->node0x503000000160;
+node0x5030000001c0->node0x503000000190;
+node0x503000000280->node0x503000000250;
 }

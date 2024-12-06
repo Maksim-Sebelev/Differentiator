@@ -2,8 +2,7 @@ TREE    ::= AddSub '$'
 AddSub  ::= MulDiv { ['+' '-'] MulDiv } *
 MulDiv  ::= Pow   { ['*' '/'] Pow }     *
 Pow     ::= Func { '^' Func }           *
-Func    ::= { {  Ln | Sin | Cos | ... | Arcctg } '(' AddSub ')' } | Bracket
+Func    ::= { { Ln | Sin | Cos | ... | Arcctg } '(' AddSub ')' } | Bracket
 Bracket ::= { '(' Func ')' } | Num | Var
-Num     ::= [ '0' - '9' ]               +
+Num     ::= [ '0' - '9' ]+
 Var     ::= 'x'
-

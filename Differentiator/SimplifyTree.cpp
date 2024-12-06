@@ -3,52 +3,52 @@
 #include <string.h>
 #include "SimplifyTree.h"
 #include "../Tree/Tree.h"
-#include "../Onegin/onegin.h"
 #include "../Tree/Tree.h"
 #include "../Tree/TreeDump.h"
 
 
-static TreeErr SimplifyTreeHelper                         (Node_t* node);
-static TreeErr SimplifyOperation                          (Node_t* node);
+static TreeErr SimplifyTreeHelper                                  (Node_t* node);
+static TreeErr SimplifyOperation                                   (Node_t* node);
 
-static TreeErr HandleSimplifyMinusWith1NumChild           (Node_t* node);
+static TreeErr SimplifyNodeTypeSubWith1ChildTypeNum                (Node_t* node);
 
-static TreeErr HandleSimplifyOpearationWith2Num           (Node_t* node);
-static TreeErr HandleSimplifyOperationWith0Child          (Node_t* node);
+static TreeErr SimplifyNodeTypeOpearationWith2ChildrenTypeNum      (Node_t* node);
+static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal0       (Node_t* node);
 
-static TreeErr HandleSimplifyLeft0Num                     (Node_t* node);
-static TreeErr HandleSimplifyRight0Num                    (Node_t* node);
+static TreeErr SimplifyLeftChildTypeNumVal0                        (Node_t* node);
+static TreeErr SimplifyRightChildTypeNumVal0                       (Node_t* node);
 
-static TreeErr Create0NumNode                             (Node_t* node);
-static TreeErr Create1NumNode                             (Node_t* node);
+static TreeErr ReamakeNodeToTypeNumVal0                            (Node_t* node);
+static TreeErr ReamakeNodeToTypeNumVal1                            (Node_t* node);
 
-static TreeErr HandleSimplifyOperationWith1NumChild       (Node_t* node);
+static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal1   (Node_t* node);
 
-static TreeErr HandleSimplifyOperationWith1NumLeftChild   (Node_t* node);
-static TreeErr HandleSimplifyOperationWith1NumRightChild  (Node_t* node);
+static TreeErr SimplifyNodeTypeOperationWithLeftChildTypeNumVal1   (Node_t* node);
+static TreeErr SimplifyNodeTypeOperationWithRightChildTypeNumVal1  (Node_t* node);
 
-static TreeErr SetNodeLeftChild                           (Node_t* node);
-static TreeErr SetNodeRightChild                          (Node_t* node);
+static TreeErr SetNodeLeftChild                                    (Node_t* node);
+static TreeErr SetNodeRightChild                                   (Node_t* node);
 
-static TreeErr SimplifyFunction                           (Node_t* node);
+static TreeErr SimplifyFunction                                    (Node_t* node);
 
-static TreeErr HandleSimplifyLn                           (Node_t* node);
-static TreeErr HandleSimplifySin                          (Node_t* node);
-static TreeErr HandleSimplifyCos                          (Node_t* node);
-static TreeErr HandleSimplifyTg                           (Node_t* node);
+static TreeErr HandleSimplifyLn                                    (Node_t* node);
+static TreeErr HandleSimplifySin                                   (Node_t* node);
+static TreeErr HandleSimplifyCos                                   (Node_t* node);
+static TreeErr HandleSimplifyTg                                    (Node_t* node);
 
-static bool    IsArgNum                             (const Node_t* node);
-static bool    IsArgOper                            (const Node_t* node);
-static bool    HasNode2NumChildren                  (const Node_t* node);
-static bool    HasNode0NumChild                     (const Node_t* node);
-static bool    IsNum0                               (const Node_t* node);
-static bool    IsArgLn                              (const Node_t* node);
-static bool    IsArgSin                             (const Node_t* node);
-static bool    IsArgCos                             (const Node_t* node);
-static bool    IsArgTg                              (const Node_t* node);
-static bool    IsOperationSimplifySituationGood     (const Node_t* node);
-static bool    IsNodeMinusWith1NumChild             (const Node_t* node);
-static bool    HasNode1NumChild                     (const Node_t* node);
+
+static bool    IsTypeNum                                           (const Node_t* node);
+static bool    IsTypeOperation                                     (const Node_t* node);
+static bool    HasNode2ChilrenTypesNum                             (const Node_t* node);
+static bool    HasNodeChildTypeNumVal0                             (const Node_t* node);
+static bool    IsNodeTypeNumAndVal0                                (const Node_t* node);
+static bool    IsTypeFunctionAndValLn                              (const Node_t* node);
+static bool    IsTypeFunctionAndValSin                             (const Node_t* node);
+static bool    IsTypeFunctionAndValCos                             (const Node_t* node);
+static bool    IsTypeFunctionAndValTg                              (const Node_t* node);
+static bool    IsSomeToSimplifyInNodeTypeOperation                 (const Node_t* node);
+static bool    IsNodeMinusWith1NumChild                            (const Node_t* node);
+static bool    HasNode1ChildTypeNumVal1                            (const Node_t* node);
 
 static Number  MakeArithmeticOperation             (Number firstOpearnd, Number secondOperand, Operation Operator);
 static Number  pow                                 (Number firstOperand, Number secondOperand);
@@ -86,7 +86,7 @@ static TreeErr SimplifyTreeHelper(Node_t* node)
     }
 
 
-    NodeArgType type = node->data.type;
+    NodeArgType type = node->type;
 
     if (type == NodeArgType::operation)
     {
@@ -112,22 +112,22 @@ static TreeErr SimplifyOperation(Node_t* node)
 
     if (IsNodeMinusWith1NumChild(node))
     {
-        TREE_ASSERT(HandleSimplifyMinusWith1NumChild(node));
+        TREE_ASSERT(SimplifyNodeTypeSubWith1ChildTypeNum(node));
     }
 
-    else if (HasNode2NumChildren(node))
+    else if (HasNode2ChilrenTypesNum(node))
     {
-        TREE_ASSERT(HandleSimplifyOpearationWith2Num(node));
+        TREE_ASSERT(SimplifyNodeTypeOpearationWith2ChildrenTypeNum(node));
     }
 
-    else if (HasNode0NumChild(node))
+    else if (HasNodeChildTypeNumVal0(node))
     {
-        TREE_ASSERT(HandleSimplifyOperationWith0Child(node));
+        TREE_ASSERT(SimplifyNodeTypeOperationWithChildTypeNumVal0(node));
     }
 
-    else if (HasNode1NumChild(node))
+    else if (HasNode1ChildTypeNumVal1(node))
     {
-        TREE_ASSERT(HandleSimplifyOperationWith1NumChild(node));
+        TREE_ASSERT(SimplifyNodeTypeOperationWithChildTypeNumVal1(node));
     }
 
     return NODE_VERIF(node, err);
@@ -142,22 +142,22 @@ static TreeErr SimplifyFunction(Node_t* node)
     TreeErr err = {};
     NODE_RETURN_IF_ERR(node, err);
 
-    if (IsArgLn(node))
+    if (IsTypeFunctionAndValLn(node))
     {
         TREE_ASSERT(HandleSimplifyLn(node));
     }
 
-    else if (IsArgSin(node))
+    else if (IsTypeFunctionAndValSin(node))
     {
         TREE_ASSERT(HandleSimplifySin(node));
     }
 
-    else if (IsArgCos(node))
+    else if (IsTypeFunctionAndValCos(node))
     {
         TREE_ASSERT(HandleSimplifyCos(node));
     }
 
-    else if (IsArgTg(node))
+    else if (IsTypeFunctionAndValTg(node))
     {
         TREE_ASSERT(HandleSimplifyTg(node));
     }
@@ -167,14 +167,14 @@ static TreeErr SimplifyFunction(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleSimplifyMinusWith1NumChild(Node_t* node)
+static TreeErr SimplifyNodeTypeSubWith1ChildTypeNum(Node_t* node)
 {
     assert(node);
     assert(node->left);
-    assert(IsArgOper(node));
+    assert(IsTypeOperation(node));
     assert(node->data.oper == Operation::minus);
     assert(!node->right);
-    assert(IsArgNum(node->left));
+    assert(IsTypeNum(node->left));
     assert(!node->left->left);
     assert(!node->left->right);
 
@@ -192,18 +192,18 @@ static TreeErr HandleSimplifyMinusWith1NumChild(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleSimplifyOpearationWith2Num(Node_t* node)
+static TreeErr SimplifyNodeTypeOpearationWith2ChildrenTypeNum(Node_t* node)
 {
     assert(node);
     assert(node->left);
     assert(node->right);
-    assert(IsArgOper(node));
-    assert(IsArgNum(node->left));
-    assert(IsArgNum(node->right));
+    assert(IsTypeOperation(node));
+    assert(IsTypeNum(node->left));
+    assert(IsTypeNum(node->right));
 
     TreeErr err = {};
 
-    if (!IsOperationSimplifySituationGood(node))
+    if (!IsSomeToSimplifyInNodeTypeOperation(node))
     {
         return NODE_VERIF(node, err);
     }
@@ -225,24 +225,24 @@ static TreeErr HandleSimplifyOpearationWith2Num(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleSimplifyOperationWith0Child(Node_t* node)
+static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal0(Node_t* node)
 {
     assert(node);
     assert(node->left);
     assert(node->right);
-    assert(IsArgOper(node));
-    assert(IsNum0(node->left) || IsNum0(node->right));
+    assert(IsTypeOperation(node));
+    assert(IsNodeTypeNumAndVal0(node->left) || IsNodeTypeNumAndVal0(node->right));
 
     TreeErr err = {};
 
-    if (IsNum0(node->left))
+    if (IsNodeTypeNumAndVal0(node->left))
     {
-        TREE_ASSERT(HandleSimplifyLeft0Num(node));
+        TREE_ASSERT(SimplifyLeftChildTypeNumVal0(node));
     }
 
-    else if (IsNum0(node->right))
+    else if (IsNodeTypeNumAndVal0(node->right))
     {
-        TREE_ASSERT(HandleSimplifyRight0Num(node));
+        TREE_ASSERT(SimplifyRightChildTypeNumVal0(node));
     }
 
     return NODE_VERIF(node, err);    
@@ -250,12 +250,12 @@ static TreeErr HandleSimplifyOperationWith0Child(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleSimplifyOperationWith1NumChild(Node_t* node)
+static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal1(Node_t* node)
 {
     assert(node);
     assert(node->left);
     assert(node->right);
-    assert(IsArgOper(node));
+    assert(IsTypeOperation(node));
     assert(node->left->data.num == 1 || node->right->data.num == 1);
 
     TreeErr err = {};
@@ -265,12 +265,12 @@ static TreeErr HandleSimplifyOperationWith1NumChild(Node_t* node)
     
     if (firstNum == 1)
     {
-        TREE_ASSERT(HandleSimplifyOperationWith1NumLeftChild(node));
+        TREE_ASSERT(SimplifyNodeTypeOperationWithLeftChildTypeNumVal1(node));
     }
 
     else if (secondNum == 1)
     {
-        TREE_ASSERT(HandleSimplifyOperationWith1NumRightChild(node));
+        TREE_ASSERT(SimplifyNodeTypeOperationWithRightChildTypeNumVal1(node));
     }
 
     return NODE_VERIF(node, err); 
@@ -278,12 +278,12 @@ static TreeErr HandleSimplifyOperationWith1NumChild(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleSimplifyOperationWith1NumLeftChild(Node_t* node)
+static TreeErr SimplifyNodeTypeOperationWithLeftChildTypeNumVal1(Node_t* node)
 {
     assert(node);
     assert(node->left);
     assert(node->right);
-    assert(IsArgOper(node));
+    assert(IsTypeOperation(node));
     assert(node->left->data.num == 1);
 
     TreeErr err = {};
@@ -295,8 +295,8 @@ static TreeErr HandleSimplifyOperationWith1NumLeftChild(Node_t* node)
         case Operation::plus:
         case Operation::minus:
         case Operation::dive:                                                      break;
-        case Operation::mul:                 TREE_ASSERT(SetNodeRightChild(node)); break;
-        case Operation::power:               TREE_ASSERT(Create1NumNode(node));    break;
+        case Operation::mul:    TREE_ASSERT(SetNodeRightChild(node));              break;
+        case Operation::power:  TREE_ASSERT(ReamakeNodeToTypeNumVal1(node));       break;
         case Operation::undefined_operation: err.err = UNDEFINED_OPERATION_TYPE;   break;
         default: assert(0 && "You forgot about some operation.\n");                break;
     }
@@ -306,12 +306,12 @@ static TreeErr HandleSimplifyOperationWith1NumLeftChild(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleSimplifyOperationWith1NumRightChild(Node_t* node)
+static TreeErr SimplifyNodeTypeOperationWithRightChildTypeNumVal1(Node_t* node)
 {
     assert(node);
     assert(node->left);
     assert(node->right);
-    assert(IsArgOper(node));
+    assert(IsTypeOperation(node));
     assert(node->right->data.num == 1);
 
     TreeErr err = {};
@@ -376,13 +376,13 @@ static TreeErr SetNodeRightChild(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleSimplifyLeft0Num(Node_t* node)
+static TreeErr SimplifyLeftChildTypeNumVal0(Node_t* node)
 {
     assert(node);
     assert(node->left);
     assert(node->right);
-    assert(IsArgOper(node));
-    assert(IsNum0(node->left));
+    assert(IsTypeOperation(node));
+    assert(IsNodeTypeNumAndVal0(node->left));
 
     TreeErr err = {};
 
@@ -392,27 +392,25 @@ static TreeErr HandleSimplifyLeft0Num(Node_t* node)
     {
         case Operation::mul:
         case Operation::dive:
-        case Operation::power: TREE_ASSERT(Create0NumNode(node));                                   break;
+        case Operation::power: TREE_ASSERT(ReamakeNodeToTypeNumVal0(node));                         break;
         case Operation::plus:  TREE_ASSERT(SetNodeRightChild(node));                                break;
-        case Operation::minus: TREE_ASSERT(SwapNode(&node->left, &node->right)); FREE(node->left)   break;
+        case Operation::minus: TREE_ASSERT(SwapNode(&node->left, &node->right)); FREE(node->left);  break;
         case Operation::undefined_operation: err.err = UNDEFINED_OPERATION_TYPE;                    break;
         default: assert(0 && "You forgot about some operation.\n");                                 break;
     }
-
-    GRAPHIC_DUMP(node);
 
     return NODE_VERIF(node, err);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr HandleSimplifyRight0Num(Node_t* node)
+static TreeErr SimplifyRightChildTypeNumVal0(Node_t* node)
 {
     assert(node);
     assert(node->left);
     assert(node->right);
-    assert(IsArgOper(node));
-    assert(IsNum0(node->right));
+    assert(IsTypeOperation(node));
+    assert(IsNodeTypeNumAndVal0(node->right));
 
     TreeErr err = {};
 
@@ -422,8 +420,8 @@ static TreeErr HandleSimplifyRight0Num(Node_t* node)
     {
         case Operation::plus:  
         case Operation::minus: TREE_ASSERT(SetNodeLeftChild(node));                break;
-        case Operation::mul:   TREE_ASSERT(Create0NumNode(node));                  break;
-        case Operation::power: TREE_ASSERT(Create1NumNode(node));                  break;
+        case Operation::mul:   TREE_ASSERT(ReamakeNodeToTypeNumVal0(node));        break;
+        case Operation::power: TREE_ASSERT(ReamakeNodeToTypeNumVal1(node));        break;
         case Operation::dive:  err.err = TreeErrorType::DIVISION_BY_0;             break;
         case Operation::undefined_operation: err.err = UNDEFINED_OPERATION_TYPE;   break;
         default: assert(0 && "You forgot about some operation.\n");                break;
@@ -437,18 +435,18 @@ static TreeErr HandleSimplifyRight0Num(Node_t* node)
 static TreeErr HandleSimplifyLn(Node_t* node)
 {
     assert(node);
-    assert(IsArgLn(node));
+    assert(IsTypeFunctionAndValLn(node));
     assert(node->left);
     assert(!node->right);
 
     TreeErr err = {};
 
-    NodeArgType type = node->left->data.type;
+    NodeArgType type = node->left->type;
     Number      num  = node->left->data.num;
 
     if (type == NodeArgType::number && num == 1)
     {
-        TREE_ASSERT(Create0NumNode(node));
+        TREE_ASSERT(ReamakeNodeToTypeNumVal0(node));
     }
 
     return NODE_VERIF(node, err);
@@ -459,18 +457,18 @@ static TreeErr HandleSimplifyLn(Node_t* node)
 static TreeErr HandleSimplifySin(Node_t* node)
 {
     assert(node);
-    assert(IsArgSin(node));
+    assert(IsTypeFunctionAndValSin(node));
     assert(node->left);
     assert(!node->right);
 
     TreeErr err = {};
 
-    NodeArgType type = node->left->data.type;
+    NodeArgType type = node->left->type;
     Number      num  = node->left->data.num;
 
     if (type == NodeArgType::number && num == 0)
     {
-        TREE_ASSERT(Create0NumNode(node));
+        TREE_ASSERT(ReamakeNodeToTypeNumVal0(node));
     }
 
     return NODE_VERIF(node, err);
@@ -481,18 +479,18 @@ static TreeErr HandleSimplifySin(Node_t* node)
 static TreeErr HandleSimplifyCos(Node_t* node)
 {
     assert(node);
-    assert(IsArgCos(node));
+    assert(IsTypeFunctionAndValCos(node));
     assert(node->left);
     assert(!node->right);
 
     TreeErr err = {};
 
-    NodeArgType type = node->left->data.type;
+    NodeArgType type = node->left->type;
     Number      num  = node->left->data.num;
 
     if (type == NodeArgType::number && num == 0)
     {
-        TREE_ASSERT(Create1NumNode(node));
+        TREE_ASSERT(ReamakeNodeToTypeNumVal1(node));
     }
 
     return NODE_VERIF(node, err);
@@ -503,18 +501,18 @@ static TreeErr HandleSimplifyCos(Node_t* node)
 static TreeErr HandleSimplifyTg(Node_t* node)
 {
     assert(node);
-    assert(IsArgTg(node));
+    assert(IsTypeFunctionAndValTg(node));
     assert(node->left);
     assert(!node->right);
 
     TreeErr err = {};
 
-    NodeArgType type = node->left->data.type;
+    NodeArgType type = node->left->type;
     Number      num  = node->left->data.num;
 
     if (type == NodeArgType::number && num == 0)
     {
-        TREE_ASSERT(Create0NumNode(node));
+        TREE_ASSERT(ReamakeNodeToTypeNumVal0(node));
     }
 
     return NODE_VERIF(node, err);
@@ -522,7 +520,7 @@ static TreeErr HandleSimplifyTg(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr Create0NumNode(Node_t* node)
+static TreeErr ReamakeNodeToTypeNumVal0(Node_t* node)
 {
     assert(node);
 
@@ -538,7 +536,7 @@ static TreeErr Create0NumNode(Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr Create1NumNode(Node_t* node)
+static TreeErr ReamakeNodeToTypeNumVal1(Node_t* node)
 {
     assert(node);
 
@@ -566,7 +564,6 @@ static Number  MakeArithmeticOperation(Number firstOpearnd, Number secondOperand
             assert(secondOperand != 0);
             assert((firstOpearnd % secondOperand) == 0);
             return firstOpearnd / secondOperand;
-            break;
 
         case Operation::undefined_operation:
             assert(0 && "Undefined operation.\n");
@@ -583,44 +580,42 @@ static Number  MakeArithmeticOperation(Number firstOpearnd, Number secondOperand
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsArgNum(const Node_t* node)
+static bool IsTypeNum(const Node_t* node)
 {   
     assert(node);
 
-    return node->data.type == NodeArgType::number;
+    return node->type == NodeArgType::number;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsArgOper(const Node_t* node)
+static bool IsTypeOperation(const Node_t* node)
 {   
     assert(node);
 
-    return node->data.type == NodeArgType::operation;
+    return node->type == NodeArgType::operation;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool HasNode2NumChildren(const Node_t* node)
+static bool HasNode2ChilrenTypesNum(const Node_t* node)
 {
     assert(node);
-    assert(node->left);
 
-
-    return (node->right) && (IsArgNum(node->left) && IsArgNum(node->right));
+    return (node->left) && (node->right) && (IsTypeNum(node->left) && IsTypeNum(node->right));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsNum0(const Node_t* node)
+static bool IsNodeTypeNumAndVal0(const Node_t* node)
 {
     assert(node);
-    return ((node->data.num == 0) && IsArgNum(node));
+    return ((node->data.num == 0) && IsTypeNum(node));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsArgLn(const Node_t* node)
+static bool IsTypeFunctionAndValLn(const Node_t* node)
 {
     assert(node);
 
@@ -631,7 +626,7 @@ static bool IsArgLn(const Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsArgSin(const Node_t* node)
+static bool IsTypeFunctionAndValSin(const Node_t* node)
 {
     assert(node);
 
@@ -642,7 +637,7 @@ static bool IsArgSin(const Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsArgCos(const Node_t* node)
+static bool IsTypeFunctionAndValCos(const Node_t* node)
 {
     assert(node);
 
@@ -653,7 +648,7 @@ static bool IsArgCos(const Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsArgTg(const Node_t* node)
+static bool IsTypeFunctionAndValTg(const Node_t* node)
 {
     assert(node);
 
@@ -664,11 +659,11 @@ static bool IsArgTg(const Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool HasNode0NumChild(const Node_t* node)
+static bool HasNodeChildTypeNumVal0(const Node_t* node)
 {
     assert(node);
 
-    return ((node->left && IsNum0(node->left)) || (node->right && IsNum0(node->right)));
+    return ((node->left && IsNodeTypeNumAndVal0(node->left)) || (node->right && IsNodeTypeNumAndVal0(node->right)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -679,7 +674,7 @@ static bool IsNodeMinusWith1NumChild(const Node_t* node)
     assert(node->left);
     
     bool flag1 = (node->data.oper == Operation::minus);
-    bool flag2 = (IsArgNum(node->left));
+    bool flag2 = (IsTypeNum(node->left));
     bool flag3 = (!node->right);
 
     return (flag1 && flag2 && flag3);
@@ -687,11 +682,9 @@ static bool IsNodeMinusWith1NumChild(const Node_t* node)
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool HasNode1NumChild(const Node_t* node)
+static bool HasNode1ChildTypeNumVal1(const Node_t* node)
 {
     assert(node);
-    assert(node->left);
-
 
     Number leftNum  = 0;
     Number rightNum = 0;
@@ -699,22 +692,22 @@ static bool HasNode1NumChild(const Node_t* node)
     if (node->left)  leftNum  = node->left ->data.num;
     if (node->right) rightNum = node->right->data.num;
 
-    bool flag1 = ((node->left && IsArgNum(node->left)) || (node->right && IsArgNum(node->right)));
-    bool flag2 = ((leftNum == 1)       || (rightNum == 1));
+    bool flag1 = ((node->left && IsTypeNum(node->left)) || (node->right && IsTypeNum(node->right)));
+    bool flag2 = ((leftNum == 1) || (rightNum == 1));
 
     return (flag1 && flag2);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsOperationSimplifySituationGood(const Node_t* node)
+static bool IsSomeToSimplifyInNodeTypeOperation(const Node_t* node)
 {
     assert(node);
     assert(node->left);
     assert(node->right);
-    assert(IsArgOper(node));
-    assert(IsArgNum(node->left));
-    assert(IsArgNum(node->right));
+    assert(IsTypeOperation(node));
+    assert(IsTypeNum(node->left));
+    assert(IsTypeNum(node->right));
 
     Operation oper       = node->data.oper;
     Number    firstNum   = node->left->data.num;

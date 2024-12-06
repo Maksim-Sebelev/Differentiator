@@ -54,11 +54,11 @@ enum NodeArgType
 enum Operation
 {
     undefined_operation,
-    plus, 
-    minus,
-    mul, 
-    dive,
-    power,
+    plus = '+', 
+    minus = '-',
+    mul = '*', 
+    dive = '/',
+    power = '^',
 };
 
 
@@ -84,16 +84,17 @@ enum Function
 enum Variable
 {
     undefined_variable,
-    x,
-    y,
+    x = 'x',
+    y = 'y',
 };
+
 
 
 typedef int Number;
 
-struct TreeElem_t
+
+union TreeElem_t
 {
-    NodeArgType type;
     Operation   oper;
     Number      num;
     Function    func;
@@ -101,9 +102,9 @@ struct TreeElem_t
 };
 
 
-
 struct Node_t
 {
+    NodeArgType type;
     TreeElem_t  data;
     Node_t*     right;
     Node_t*     left;
@@ -116,17 +117,16 @@ struct Tree_t
     Node_t* root;
     size_t  size;
 };
+    
 
-Node_t* GetTree(const char* inputStr);
-
-TreeErr TreeCtor               (Tree_t*  tree, const char** buffer, size_t bufSize);
-TreeErr TreeDtor               (Tree_t*  root, const char** buffer);
-TreeErr NodeCtor               (Node_t** node, NodeArgType type, Number num, Operation oper, Function func, Variable variable, Node_t* left, Node_t* right);
+TreeErr TreeCtor               (Tree_t* tree, const char* input);
+TreeErr TreeDtor               (Tree_t*  root);
+TreeErr NodeCtor               (Node_t** node, NodeArgType type, void* value, Node_t* left, Node_t* right);
 TreeErr NodeDtor               (Node_t*  node);
 TreeErr NodeAndUnderTreeDtor   (Node_t* node);
 
 TreeErr NodeCopy               (Node_t** copy, const Node_t* node);
-TreeErr SetNode                (Node_t*  node, NodeArgType type, Number num, Operation oper, Function func, Variable var, Node_t* left, Node_t* right);
+TreeErr SetNode                (Node_t*  node, NodeArgType type, void* value, Node_t* left, Node_t* right);
 TreeErr NodeSetCopy            (Node_t* copy, const Node_t* node);
 TreeErr SwapNode               (Node_t** node1, Node_t** node2);
 
@@ -134,46 +134,42 @@ TreeErr TreeVerif              (const Tree_t* tree, TreeErr* Err, const char* fi
 TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* file, const int line, const char* func);
 
 
-Number    GetNumber            (const char* number);
-Operation GetOperationType     (const char* operation);
-Function  GetFunctionType      (const char* function);
-Variable  GetVariableType      (const char* variable);
+#define FREE(ptr) free((char*)ptr); ptr = nullptr
+
+#define _NUM(  node, val           ) { Number    num   = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::number,    &num,   nullptr, nullptr)); }
+#define _FUNC( node, val, left     ) { Function  func  = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::function,  &func,  left,    nullptr)); }
+#define _VAR(  node, val           ) { Variable  var   = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::variable,  &var,   nullptr, nullptr)); }
+#define _OPER( node, val           ) { Operation oper  = val;              TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper,  nullptr, nullptr)); }
+
+#define _SET_NUM(  node, val       ) { Number    num  = val;               TREE_ASSERT(SetNode (node, NodeArgType::number,     &num,  nullptr, nullptr)); }
+#define _SET_FUNC( node, val, left ) { Function  func = val;               TREE_ASSERT(SetNode (node, NodeArgType::function,   &func, left,    nullptr)); }
+#define _SET_VAR(  node, val       ) { Variable  var  = val;               TREE_ASSERT(SetNode (node, NodeArgType::variable,   &var,  nullptr, nullptr)); }
+#define _SET_OPER( node, val       ) { Operation oper = val;               TREE_ASSERT(SetNode (node, NodeArgType::operation,  &oper, nullptr, nullptr)); }
+
+#define _SET_FUNC_ONLY( node, val  ) { Function  func = val;               TREE_ASSERT(SetNode (node, NodeArgType::function,  &func, (node)->left, (node)->right)); }
+#define _SET_OPER_ONLY( node, val  ) { Operation oper = val;               TREE_ASSERT(SetNode (node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
+
+#define _MUL( node, left, right    ) { Operation oper = Operation::mul;    TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
+#define _DIV( node, left, right    ) { Operation oper = Operation::dive;   TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
+#define _ADD( node, left, right    ) { Operation oper = Operation::plus;   TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
+#define _SUB( node, left, right    ) { Operation oper = Operation::minus;  TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
+#define _POW( node, left, right    ) { Operation oper = Operation::power;  TREE_ASSERT(NodeCtor(node, NodeArgType::operation, &oper, left, right)); }
 
 
-#define _NUM(  node, val            ) TREE_ASSERT(NodeCtor(node, NodeArgType::number,    val, Operation::undefined_operation, Function::undefined_function, Variable::undefined_variable, nullptr,         nullptr))
-#define _FUNC( node, func, left     ) TREE_ASSERT(NodeCtor(node, NodeArgType::function,  0,   Operation::undefined_operation, func,                         Variable::undefined_variable, left,            nullptr))
-#define _VAR(  node, var            ) TREE_ASSERT(NodeCtor(node, NodeArgType::variable,  0,   Operation::undefined_operation, Function::undefined_function, var,                          nullptr,         nullptr))
-
-#define _SET_NUM(  node, val        ) TREE_ASSERT(SetNode (node, NodeArgType::number,    val, Operation::undefined_operation, Function::undefined_function, Variable::undefined_variable, nullptr,         nullptr))
-#define _SET_FUNC( node, func, left ) TREE_ASSERT(SetNode (node, NodeArgType::function,  0,   Operation::undefined_operation, func,                         Variable::undefined_variable, left,            nullptr))
-#define _SET_VAR(  node, var        ) TREE_ASSERT(SetNode (node, NodeArgType::variable,  0,   Operation::undefined_operation, Function::undefined_function, var,                          nullptr,         nullptr))
+#define _SET_MUL( node, left, right    ) { Operation oper = Operation::mul;    TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
+#define _SET_DIV( node, left, right    ) { Operation oper = Operation::dive;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
+#define _SET_ADD( node, left, right    ) { Operation oper = Operation::plus;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
+#define _SET_SUB( node, left, right    ) { Operation oper = Operation::minus;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
+#define _SET_POW( node, left, right    ) { Operation oper = Operation::power;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, left, right)); }
 
 
-#define _SET_FUNC_ONLY( node, func )  TREE_ASSERT(SetNode (node, NodeArgType::function,  0,   Operation::undefined_operation, func,                         Variable::undefined_variable, (node)->left,    nullptr))
-#define _SET_VAR_ONLY(  node, var  )  TREE_ASSERT(SetNode (node, NodeArgType::variable,  0,   Operation::undefined_operation, Function::undefined_function, var,                          nullptr,         nullptr))
+#define _SET_MUL_ONLY( node            ) { Operation oper = Operation::mul;    TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
+#define _SET_DIV_ONLY( node            ) { Operation oper = Operation::dive;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
+#define _SET_ADD_ONLY( node            ) { Operation oper = Operation::plus;   TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
+#define _SET_SUB_ONLY( node            ) { Operation oper = Operation::minus;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
+#define _SET_POW_ONLY( node            ) { Operation oper = Operation::power;  TREE_ASSERT(SetNode(node, NodeArgType::operation, &oper, (node)->left, (node)->right)); }
 
-
-#define _MUL( node, left, right )     TREE_ASSERT(NodeCtor(node, NodeArgType::operation, 0, Operation::mul,     Function::undefined_function, Variable::undefined_variable, left, right))
-#define _DIV( node, left, right )     TREE_ASSERT(NodeCtor(node, NodeArgType::operation, 0, Operation::dive,    Function::undefined_function, Variable::undefined_variable, left, right))
-#define _ADD( node, left, right )     TREE_ASSERT(NodeCtor(node, NodeArgType::operation, 0, Operation::plus,    Function::undefined_function, Variable::undefined_variable, left, right))
-#define _SUB( node, left, right )     TREE_ASSERT(NodeCtor(node, NodeArgType::operation, 0, Operation::minus,   Function::undefined_function, Variable::undefined_variable, left, right))
-#define _POW( node, left, right )     TREE_ASSERT(NodeCtor(node, NodeArgType::operation, 0, Operation::power,   Function::undefined_function, Variable::undefined_variable, left, right))
-
-
-#define _SET_MUL( node, left, right ) TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::mul,   Function::undefined_function, Variable::undefined_variable, left,    right))
-#define _SET_DIV( node, left, right ) TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::dive,  Function::undefined_function, Variable::undefined_variable, left,    right))
-#define _SET_ADD( node, left, right ) TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::plus,  Function::undefined_function, Variable::undefined_variable, left,    right))
-#define _SET_SUB( node, left, right ) TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::minus, Function::undefined_function, Variable::undefined_variable, left,    right))
-#define _SET_POW( node, left, right ) TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::power, Function::undefined_function, Variable::undefined_variable, left,    right))
-
-
-#define _SET_MUL_ONLY( node )         TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::mul,   Function::undefined_function, Variable::undefined_variable, (node)->left,    (node)->right))
-#define _SET_DIV_ONLY( node )         TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::dive,  Function::undefined_function, Variable::undefined_variable, (node)->left,    (node)->right))
-#define _SET_ADD_ONLY( node )         TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::plus,  Function::undefined_function, Variable::undefined_variable, (node)->left,    (node)->right))
-#define _SET_SUB_ONLY( node )         TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::minus, Function::undefined_function, Variable::undefined_variable, (node)->left,    (node)->right))
-#define _SET_POW_ONLY( node )         TREE_ASSERT(SetNode(node, NodeArgType::operation, 0, Operation::power, Function::undefined_function, Variable::undefined_variable, (node)->left,    (node)->right))
-
-
+;
 #define TREE_VERIF(TreePtr, Err) TreeVerif(TreePtr, &Err, __FILE__, __LINE__, __func__)
 
 #define NODE_VERIF(Node, Err)    NodeVerif(Node,    &Err, __FILE__, __LINE__, __func__)
