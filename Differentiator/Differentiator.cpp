@@ -268,13 +268,11 @@ static TreeErr HandleDiffPow(Node_t** node)
     TREE_ASSERT(NodeCopy(&new_right_right_right_left,  _R));
     TREE_ASSERT(NodeCopy(&new_right_right_right_right, _L));
 
-
     TREE_ASSERT(NodeCopy(&new_right_left_right_left, _L));
 
     TREE_ASSERT(NodeCopy(&new_right_left_left, _R));
     TREE_ASSERT(DiffNode(&new_right_left_left));
     _FUNC(&new_right_left_right, Function::ln, new_right_left_right_left);
-
 
     TREE_ASSERT(NodeCopy(&new_right_right_left, _L));
     TREE_ASSERT(DiffNode(&new_right_right_left));

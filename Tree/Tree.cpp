@@ -15,8 +15,8 @@ static bool         HasntVarChild                  (const Node_t* node);
 static bool         HasOperationChildren           (const Node_t* node);
 static bool         HasFuncLeftChildOnly           (const Node_t* node);
 
-static bool         IsNodeOperTypeUndef            (const Node_t* node);
-static bool         IsNodeFuncTypeUndef            (const Node_t* node);
+static bool         IsNodeTypeOperationDataCorrect            (const Node_t* node);
+static bool         IsNodeTypeFunctionDataCorrect            (const Node_t* node);
 static bool         IsNodeVariableTypeUndef        (const Node_t* node);
 
 //======================================================================================================================================================================
@@ -33,16 +33,16 @@ TreeErr TreeCtor(Tree_t* tree, const char* input)
 
     size_t tokenQuant = 0;
     Token_t* token = ReadInputStr(input, &tokenQuant);
-    TOKEN_DUMP(token, tokenQuant);
+    TOKEN_GRAPHIC_DUMP(token, tokenQuant);
 
-    tree->root = GetTree(token);
+    tree->root = GetTree(token, input);
 
     TokenDtor(token);
 
     return TREE_VERIF(tree, err);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TreeErr TreeDtor(Tree_t* tree)
 {
@@ -59,7 +59,7 @@ TreeErr TreeDtor(Tree_t* tree)
     return TREE_VERIF(tree, Err);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TreeErr NodeAndUnderTreeDtor(Node_t* node)
 {
@@ -85,9 +85,9 @@ TreeErr NodeAndUnderTreeDtor(Node_t* node)
     return err;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-TreeErr NodeCtor(Node_t** node, NodeArgType type, void* value, Node_t* left, Node_t* right)
+TreeErr NodeCtor(Node_t** node, NodeArgType type, NodeData_t data, Node_t* left, Node_t* right)
 {
     TreeErr err = {};
 
@@ -101,15 +101,7 @@ TreeErr NodeCtor(Node_t** node, NodeArgType type, void* value, Node_t* left, Nod
 
     (*node)->type = type;
 
-    switch (type)
-    {
-        case NodeArgType::number:    (*node)->data.num  = *(Number*)    value;  break;
-        case NodeArgType::operation: (*node)->data.oper = *(Operation*) value;  break;
-        case NodeArgType::function:  (*node)->data.func = *(Function*)  value;  break;
-        case NodeArgType::variable:  (*node)->data.var  = *(Variable*)  value;  break;
-        case NodeArgType::undefined:
-        default: err.err = UNDEFINED_NODE_TYPE; return NODE_VERIF(*node, err);
-    }
+    (*node)->data = data;
 
     (*node)->left      = left;
     (*node)->right     = right;
@@ -118,7 +110,7 @@ TreeErr NodeCtor(Node_t** node, NodeArgType type, void* value, Node_t* left, Nod
     return NODE_VERIF(*node, err);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TreeErr NodeDtor(Node_t* node)
 {
@@ -131,10 +123,11 @@ TreeErr NodeDtor(Node_t* node)
 
     FREE(node);
 
+    CodePlaceCtor(&err.place, __FILE__, __LINE__, __func__);
     return err;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TreeErr NodeCopy(Node_t** copy, const Node_t* node)
 {
@@ -142,47 +135,13 @@ TreeErr NodeCopy(Node_t** copy, const Node_t* node)
 
     TreeErr err = {};
 
-    NodeArgType type = node->type;
-    Node_t* left     = node->left;
-    Node_t* right    = node->right;
+    NodeArgType type  = node->type;
+    NodeData_t  data  = node->data;
+    Node_t*     left  = node->left;
+    Node_t*     right = node->right;
 
-    switch (type)
-    {
-        case NodeArgType::number:
-        {
-            Number number = node->data.num;
-            TREE_ASSERT(NodeCtor(copy, type, &number, left, right));
-            break;
-        }
+    TREE_ASSERT(NodeCtor(copy, type, data, left, right));
 
-        case NodeArgType::variable:  
-        {
-            Variable variable = node->data.var;
-            TREE_ASSERT(NodeCtor(copy, type, &variable,  left, right));
-            break;
-        }
-
-        case NodeArgType::operation: 
-        {
-            Operation operation = node->data.oper;
-            TREE_ASSERT(NodeCtor(copy, type, &operation, left, right));
-            break;
-        }
-
-        case NodeArgType::function:  
-        {
-            Function function = node->data.func;
-            TREE_ASSERT(NodeCtor(copy, type, &function,  left, right));
-            break;
-        }
-
-        case NodeArgType::undefined:
-        default:
-        {
-            err.err = TreeErrorType::NODE_NULL;
-            return NODE_VERIF(node, err);
-        }
-    }
 
     if (*copy == nullptr)
     {
@@ -200,10 +159,10 @@ TreeErr NodeCopy(Node_t** copy, const Node_t* node)
         TREE_ASSERT(NodeCopy(&(*copy)->right, node->right));
     }
 
-    return err;
+    return NODE_VERIF(*copy, err);
 }
 
-//--------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TreeErr NodeSetCopy(Node_t* copy, const Node_t* node)
 {
@@ -222,25 +181,25 @@ TreeErr NodeSetCopy(Node_t* copy, const Node_t* node)
         case NodeArgType::number:
         {
             Number number = node->data.num;
-            TREE_ASSERT(SetNode(copy, type, &number, left, right));
+            _SET_NUM(copy, number);
             break;
         }
         case NodeArgType::variable:  
         {
             Variable variable = node->data.var;
-            TREE_ASSERT(SetNode(copy, type, &variable,  left, right));
+            _SET_VAR(copy, variable);
             break;
         }
         case NodeArgType::operation: 
         {
             Operation operation = node->data.oper;
-            TREE_ASSERT(SetNode(copy, type, &operation, left, right));
+            _SET_OPER(copy, operation, left, right);
             break;
         }
         case NodeArgType::function:  
         {
             Function function = node->data.func;
-            TREE_ASSERT(SetNode(copy, type, &function,  left, right));
+            _SET_FUNC(copy, function, left);
             break;
         }
         case NodeArgType::undefined:
@@ -250,9 +209,9 @@ TreeErr NodeSetCopy(Node_t* copy, const Node_t* node)
     return NODE_VERIF(copy, err);
 }
 
-//--------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-TreeErr SetNode(Node_t* node, NodeArgType type, void* value, Node_t* left, Node_t* right)
+TreeErr SetNode(Node_t* node, NodeArgType type, NodeData_t data, Node_t* left, Node_t* right)
 {
     assert(node);
 
@@ -264,20 +223,12 @@ TreeErr SetNode(Node_t* node, NodeArgType type, void* value, Node_t* left, Node_
 
     node->type = type;
 
-    switch (type)
-    {
-        case NodeArgType::number:    node->data.num  = *(Number*)    value;     break;
-        case NodeArgType::variable:  node->data.var  = *(Variable*)  value;     break;
-        case NodeArgType::operation: node->data.oper = *(Operation*) value;     break;
-        case NodeArgType::function:  node->data.func = *(Function*)  value;     break;
-        case NodeArgType::undefined:
-        default: node->type = undefined; err.err = TreeErrorType::NODE_NULL; return NODE_VERIF(node, err);
-    }
+    node->data = data;
 
     return NODE_VERIF(node, err);
 }
 
-//--------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TreeErr SwapNode(Node_t** node1, Node_t** node2)
 {
@@ -295,63 +246,7 @@ TreeErr SwapNode(Node_t** node1, Node_t** node2)
     return NODE_VERIF(*node2, err);
 }
 
-//===================================== Create Tree (recursive spusk) =======================================================================================================================
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//--------------------------------------------------------------------------------------------------------------------------------------
-
-
-static bool HasntNumChild(const Node_t* node)
-{
-    assert(node);
-    assert(node->type == NodeArgType::number);
-
-    return !(node->left) && !(node->right);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------
-
-static bool HasntVarChild(const Node_t* node)
-{
-    assert(node);
-    assert(node->type == NodeArgType::variable);
-
-    return !(node->left) && !(node->right);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------
-
-static bool HasOperationChildren(const Node_t* node)
-{
-    assert(node);
-    assert(node->type == NodeArgType::operation);
-
-    if (node->data.oper == Operation::minus)
-        return (node->left);
-
-    return (node->left) && (node->right);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------
-
-static bool HasFuncLeftChildOnly(const Node_t* node)
-{
-    assert(node);
-    assert(node->type == NodeArgType::function);
-
-    return (node->left) && !(node->right);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------
-
-static bool IsError(const TreeErr* err)
-{
-    assert(err);
-    return err->err != TreeErrorType::NO_ERR;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TreeErr TreeVerif(const Tree_t* tree, TreeErr* err, const char* file, const int line, const char* func)
 {
@@ -375,7 +270,7 @@ TreeErr TreeVerif(const Tree_t* tree, TreeErr* err, const char* file, const int 
     return *err;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 TreeErr NodeVerif(const Node_t* node, TreeErr* err, const char* file, const int line, const char* func)
 {
@@ -406,66 +301,156 @@ TreeErr NodeVerif(const Node_t* node, TreeErr* err, const char* file, const int 
 
         case NodeArgType::operation:
         {
-            RETURN_IF_FALSE(IsNodeOperTypeUndef (node), *err, err->err = TreeErrorType::OPER_TYPE_NODES_ARG_IS_UNDEFINED);
+            RETURN_IF_FALSE(IsNodeTypeOperationDataCorrect (node), *err, err->err = TreeErrorType::OPER_TYPE_NODES_ARG_IS_UNDEFINED);
             RETURN_IF_FALSE(HasOperationChildren(node), *err, err->err = TreeErrorType::OPER_HAS_INCORRECT_CHILD_QUANT);
             break;
         }
 
         case NodeArgType::function:
         {
-            RETURN_IF_FALSE(IsNodeFuncTypeUndef (node), *err, err->err = TreeErrorType::FUNC_TYPE_NODES_ARG_IS_UNDEFINED);
+            RETURN_IF_FALSE(IsNodeTypeFunctionDataCorrect (node), *err, err->err = TreeErrorType::FUNC_TYPE_NODES_ARG_IS_UNDEFINED);
             RETURN_IF_FALSE(HasFuncLeftChildOnly(node), *err, err->err = TreeErrorType::FUNC_HAS_INCORRECT_CHILD_QUANT);
             break;
         }
 
         case NodeArgType::undefined:
+        default:
         {
             err->err = TreeErrorType::UNDEFINED_NODE_TYPE;
             return *err;
-            break;
-        }
-
-        default:
-        {
-            assert(0 && "you forgot about some node type in NodeVerif in tree.cpp.\n");
-            break;
         }
     }
-    
+
     return *err;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsNodeOperTypeUndef(const Node_t* node)
+static bool HasntNumChild(const Node_t* node)
+{
+    assert(node);
+    assert(node->type == NodeArgType::number);
+
+    return !(node->left) && !(node->right);
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool HasntVarChild(const Node_t* node)
+{
+    assert(node);
+    assert(node->type == NodeArgType::variable);
+
+    return !(node->left) && !(node->right);
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool HasOperationChildren(const Node_t* node)
 {
     assert(node);
     assert(node->type == NodeArgType::operation);
 
-    return node->data.oper != Operation::undefined_operation;
+    if (node->data.oper == Operation::minus)
+        return (node->left);
+
+    return (node->left) && (node->right);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsNodeFuncTypeUndef(const Node_t* node)
+static bool HasFuncLeftChildOnly(const Node_t* node)
 {
     assert(node);
     assert(node->type == NodeArgType::function);
 
-    return node->data.func != Function::undefined_function;
+    return (node->left) && !(node->right);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsError(const TreeErr* err)
+{
+    assert(err);
+    return err->err != TreeErrorType::NO_ERR;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsNodeTypeOperationDataCorrect(const Node_t* node)
+{
+    assert(node);
+    assert(node->type == NodeArgType::operation);
+
+    Operation operation = node->data.oper;
+
+    switch (operation)
+    {
+        case Operation::plus:
+        case Operation::minus:
+        case Operation::mul:
+        case Operation::dive:
+        case Operation::power: break;
+        case Operation::undefined_operation:
+        default: return false;
+    }
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static bool IsNodeTypeFunctionDataCorrect(const Node_t* node)
+{
+    assert(node);
+    assert(node->type == NodeArgType::function);
+
+    Function fucntion = node->data.func;
+
+    switch (fucntion)
+    {
+        case Function::ln:
+        case Function::sin:
+        case Function::cos:
+        case Function::tg:
+        case Function::ctg:
+        case Function::sh:
+        case Function::ch:
+        case Function::th:
+        case Function::cth:
+        case Function::arcsin:
+        case Function::arccos:
+        case Function::arctg:
+        case Function::arcctg: break;
+        case Function::undefined_function:
+        default: return false;
+    }
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static bool IsNodeVariableTypeUndef(const Node_t* node)
 {
     assert(node);
     assert(node->type == NodeArgType::variable);
 
-    return node->data.var != Variable::undefined_variable;
+    Variable variable = node->data.var;
+
+    switch (variable)
+    {
+        case Variable::x:
+        case Variable::y: break;
+        case Variable::undefined_variable:
+        default: return false;
+    }
+
+    return true;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 static TreeErr AllNodeVerif(const Node_t* node, size_t* treeSize)
 {
     assert(node);
@@ -492,7 +477,7 @@ static TreeErr AllNodeVerif(const Node_t* node, size_t* treeSize)
     return err;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static void PrintError(const TreeErr* Err)
 {
@@ -598,7 +583,7 @@ static void PrintError(const TreeErr* Err)
     return;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TreeAssertPrint(TreeErr* err, const char* file, const int line, const char* func)
 {
@@ -613,7 +598,4 @@ void TreeAssertPrint(TreeErr* err, const char* file, const int line, const char*
     return;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-#undef UNFINISHED_NODE_VERIF
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

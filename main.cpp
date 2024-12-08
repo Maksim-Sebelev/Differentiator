@@ -11,20 +11,19 @@ int main()
 {
     Tree_t tree = {};
 
-    const char* input = "3*cos(x+4)*5$";
+    const char* input = "x*(x+21$";
 
     TREE_ASSERT(TreeCtor(&tree, input));
-
-    GRAPHIC_DUMP(tree.root);
+    TREE_GRAPHIC_DUMP(tree.root);
 
     TREE_ASSERT(Diff(&tree));
-    GRAPHIC_DUMP(tree.root);
+    TREE_GRAPHIC_DUMP(tree.root);
 
     TREE_ASSERT(SimplifyTree(&tree));
-    GRAPHIC_DUMP(tree.root);
+    TREE_GRAPHIC_DUMP(tree.root);
 
     // TREE_ASSERT(CalcTree(&tree, 3));
-    // GRAPHIC_DUMP(tree.root);
+    // TREE_GRAPHIC_DUMP(tree.root);
 
     TREE_ASSERT(TreeDtor(&tree));
 

@@ -13,6 +13,8 @@ struct CodePlace
 void PrintPlace     (                  const char* const file, const int line, const char* const func);
 void CodePlaceCtor  (CodePlace* place, const char* const file, const int line, const char* const func);
 
+#define PRINT_PLACE(color, file, line, func) printf(color); PrintPlace(file, line, func); printf(RESET)
+
 
 #define RETURN_IF_FALSE(flag, returnElem, ...) \
 if (!(flag))                                    \

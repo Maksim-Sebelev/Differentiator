@@ -23,8 +23,8 @@ static void HandleOperation  (const char* input, Token_t* tokenArr, Pointers* po
 static void HandleLetter     (const char* input, Token_t* tokenArr, Pointers* pointer);
 static void HandleBracket    (const char* input, Token_t* tokenArr, Pointers* pointer);
 static void HandleEndSymbol  (const char* input, Token_t* tokenArr, Pointers* pointer);
-static void HandleVariable   (const char* input, Token_t* tokenArr, Variable variable, const char* word, Pointers* pointer);
-static void HandleFunction   (                   Token_t* tokenArr, Function function, const char* word, Pointers* pointer);
+static void HandleVariable   (                   Token_t* tokenArr, Variable variable, Pointers* pointer, size_t olp_sp);
+static void HandleFunction   (                   Token_t* tokenArr, Function function, Pointers* pointer, size_t old_sp);
 
 
 static bool IsPassSymbol       (char c, Pointers* pointer);
@@ -39,9 +39,9 @@ static bool IsSpace            (char c);
 static bool IsSlashN           (char c);
 
 static Number    GetNumber        (const char* input,     Pointers* pointer);
-static Operation GetOperation     (const char* operation, Pointers* pointer);
-static Function  GetFunction      (const char* function);
-static Variable  GetVariable      (const char* variable);
+static Operation GetOperation     (const char* operation, Pointers* pointer, size_t* operationSize);
+static Function  GetFunction      (const char* word, size_t wordSize);
+static Variable  GetVariable      (const char* word, size_t wordSize);
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -99,8 +99,8 @@ static void TokenCtor(Token_t* token, TokenType type, void* value, size_t fileLi
 
     token->type = type;
 
-    token->place.line        = fileLine;
-    token->place.placeInLine = linePos;
+    token->place.line        = fileLine + 1;
+    token->place.placeInLine = linePos  + 1;
 
     switch (type)
     {
@@ -123,8 +123,9 @@ static void HandleNumber(const char* input, Token_t* tokenArr, Pointers* pointer
     assert(tokenArr);
     assert(pointer);
 
+    size_t old_sp = pointer->sp;
     Number number = GetNumber(input, pointer);
-    TokenCtor(&tokenArr[pointer->tp], TokenType::Number_t, &number, pointer->lp, pointer->sp);
+    TokenCtor(&tokenArr[pointer->tp], TokenType::Number_t, &number, pointer->lp, old_sp);
     pointer->tp++;
     return;
 }
@@ -136,10 +137,12 @@ static void HandleOperation(const char* input, Token_t* tokenArr, Pointers* poin
     assert(tokenArr);
     assert(pointer);
 
-    Operation operation = GetOperation(input, pointer);
+    size_t operationSize = 0;
+    Operation operation = GetOperation(input, pointer, &operationSize);
     TokenCtor(&tokenArr[pointer->tp], TokenType::Operation_t, &operation, pointer->lp, pointer->sp);
     pointer->tp++;
     pointer->ip++;
+    pointer->sp += operationSize;
     return;
 }
 
@@ -157,27 +160,28 @@ static void HandleLetter(const char* input, Token_t* tokenArr, Pointers* pointer
     }
     while (IsLetterSymbol(input, pointer->ip));
 
+    const char* word = input + old_ip;
     const size_t wordSize = pointer->ip - old_ip;
-    const char* word = strndup(input + old_ip, wordSize);
     assert(word);
 
-    Function function = GetFunction(word);
+    Function function = GetFunction(word, wordSize);
 
     if (function != Function::undefined_function)
     {
-        HandleFunction(tokenArr, function, word, pointer);
+        HandleFunction(tokenArr, function, pointer, wordSize);
         return;
     }
 
-    Variable variable = GetVariable(word);
+    Variable variable = GetVariable(word, wordSize);
 
     if (variable != Variable::undefined_variable)
     {
-        HandleVariable(input, tokenArr, variable, word, pointer);
+        HandleVariable(tokenArr, variable, pointer, wordSize);
         return;
     }
 
     assert(0 && "undefined word in input.");
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -192,7 +196,9 @@ static void HandleBracket(const char* input, Token_t* tokenArr, Pointers* pointe
     pointer->ip++;
 
     TokenCtor(&tokenArr[pointer->tp], TokenType::Bracket_t, &bracket, pointer->lp, pointer->sp);
+    
     pointer->tp++;
+    pointer->sp++;
 
     return;
 }
@@ -210,37 +216,38 @@ static void HandleEndSymbol(const char* input, Token_t* tokenArr, Pointers* poin
 
     TokenCtor(&tokenArr[pointer->tp], TokenType::EndSymbol_t, &end, pointer->lp, pointer->sp);
     pointer->tp++;
+    pointer->sp++;
 
     return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 
-static void HandleVariable(const char* input, Token_t* tokenArr, Variable variable, const char* word, Pointers* pointer)
+static void HandleVariable(Token_t* tokenArr, Variable variable, Pointers* pointer, size_t wordSize)
 {
     assert(tokenArr);
-    assert(word);
     assert(pointer);
 
     TokenCtor(&tokenArr[pointer->tp], TokenType::Variable_t, &variable, pointer->lp, pointer->sp);
+
     pointer->tp++;
-    pointer->sp += strlen(word);
-    FREE(word);
+    pointer->sp += wordSize;
+
     return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static void HandleFunction(Token_t* tokenArr, Function function, const char* word, Pointers* pointer)
+static void HandleFunction(Token_t* tokenArr, Function function, Pointers* pointer, size_t wordSize)
 {
     assert(tokenArr);
-    assert(word);
     assert(pointer);
 
     TokenCtor(&tokenArr[pointer->tp], TokenType::Function_t, &function, pointer->lp, pointer->sp);
+
     pointer->tp++;
-    pointer->sp += strlen(word);
-    FREE(word);
+    pointer->sp += wordSize;
+
     return;
 }
 
@@ -333,6 +340,7 @@ static bool IsSlashN(char c)
 
 static bool IsPassSymbol(char c, Pointers* pointer)
 {
+    assert(pointer);
     RETURN_IF_TRUE(IsSpace(c),  true, pointer->sp++, pointer->ip++);
     RETURN_IF_TRUE(IsSlashN(c), true, pointer->lp++, pointer->ip++, pointer->sp = 0);
     return false;
@@ -343,62 +351,62 @@ static bool IsPassSymbol(char c, Pointers* pointer)
 
 #define STRCMP(oper) (strncmp(operation + pointer->ip, oper, strlen(oper)) == 0)
 
-static Operation GetOperation(const char* operation, Pointers* pointer)
+static Operation GetOperation(const char* operation, Pointers* pointer, size_t* operationSize)
 {
     assert(operation);
 
-    RETURN_IF_TRUE(STRCMP("+"), Operation::plus);
-    RETURN_IF_TRUE(STRCMP("-"), Operation::minus);
-    RETURN_IF_TRUE(STRCMP("*"), Operation::mul);
-    RETURN_IF_TRUE(STRCMP("/"), Operation::dive);
-    RETURN_IF_TRUE(STRCMP("^"), Operation::power);
+    RETURN_IF_TRUE(STRCMP("+"), Operation::plus , *operationSize = 1);
+    RETURN_IF_TRUE(STRCMP("-"), Operation::minus, *operationSize = 1);
+    RETURN_IF_TRUE(STRCMP("*"), Operation::mul  , *operationSize = 1);
+    RETURN_IF_TRUE(STRCMP("/"), Operation::dive , *operationSize = 1);
+    RETURN_IF_TRUE(STRCMP("^"), Operation::power, *operationSize = 1);
 
     return Operation::undefined_operation;
-}
+} 
 
 #undef STRCMP
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-#define STRCMP(func) (strcmp(function, func) == 0)
+#define STRNCMP(function) (strncmp(word, function, wordSize) == 0)
 
-static Function GetFunction(const char* function)
+static Function GetFunction(const char* word, size_t wordSize)
 {
-    assert(function);
+    assert(word);
 
-    RETURN_IF_TRUE(STRCMP("ln")    , Function::ln    );
-    RETURN_IF_TRUE(STRCMP("sin")   , Function::sin   );
-    RETURN_IF_TRUE(STRCMP("cos")   , Function::cos   );
-    RETURN_IF_TRUE(STRCMP("tg")    , Function::tg    );
-    RETURN_IF_TRUE(STRCMP("ctg")   , Function::ctg   );
-    RETURN_IF_TRUE(STRCMP("sh")    , Function::sh    );
-    RETURN_IF_TRUE(STRCMP("ch")    , Function::ch    );
-    RETURN_IF_TRUE(STRCMP("th")    , Function::th    );
-    RETURN_IF_TRUE(STRCMP("cth")   , Function::cth   );
-    RETURN_IF_TRUE(STRCMP("arcsin"), Function::arcsin);
-    RETURN_IF_TRUE(STRCMP("arcos") , Function::arccos);
-    RETURN_IF_TRUE(STRCMP("arctg") , Function::arctg );
-    RETURN_IF_TRUE(STRCMP("arcctg"), Function::arcctg);
+    RETURN_IF_TRUE(STRNCMP("ln")    , Function::ln    );
+    RETURN_IF_TRUE(STRNCMP("sin")   , Function::sin   );
+    RETURN_IF_TRUE(STRNCMP("cos")   , Function::cos   );
+    RETURN_IF_TRUE(STRNCMP("tg")    , Function::tg    );
+    RETURN_IF_TRUE(STRNCMP("ctg")   , Function::ctg   );
+    RETURN_IF_TRUE(STRNCMP("sh")    , Function::sh    );
+    RETURN_IF_TRUE(STRNCMP("ch")    , Function::ch    );
+    RETURN_IF_TRUE(STRNCMP("th")    , Function::th    );
+    RETURN_IF_TRUE(STRNCMP("cth")   , Function::cth   );
+    RETURN_IF_TRUE(STRNCMP("arcsin"), Function::arcsin);
+    RETURN_IF_TRUE(STRNCMP("arccos"), Function::arccos);
+    RETURN_IF_TRUE(STRNCMP("arctg") , Function::arctg );
+    RETURN_IF_TRUE(STRNCMP("arcctg"), Function::arcctg);
 
     return Function::undefined_function;
 }
 
-#undef STRCMP
+#undef STRNCMP
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-#define STRCMP(var) (strcmp(variable, var) == 0)
+#define STRNCMP(variable) (strncmp(word, variable, wordSize) == 0)
 
-static Variable GetVariable(const char* variable)
+static Variable GetVariable(const char* word, size_t wordSize)
 {
-    assert(variable);
+    assert(word);
 
-    RETURN_IF_TRUE(STRCMP("x"), Variable::x);
-    RETURN_IF_TRUE(STRCMP("y"), Variable::y);
+    RETURN_IF_TRUE(STRNCMP("x"), Variable::x);
+    RETURN_IF_TRUE(STRNCMP("y"), Variable::y);
 
     return Variable::undefined_variable;
 }
 
-#undef STRCMP    
+#undef STRNCMP    
 
 //--------------------------------------------------------------------------------------------------------------------------------------

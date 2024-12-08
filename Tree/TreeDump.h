@@ -1,17 +1,20 @@
-#ifndef TREE_DUMP_H
-#define TREE_DUMP_H
+#ifndef TREE_GRAPHIC_DUMP_H
+#define TREE_GRAPHIC_DUMP_H
 
 #include "Tree.h"
 #include "Token.h"
 
-void TokenDump        (const Token_t* tokenArr, size_t arrSize, const char* file, const int line, const char* func);
-void GraphicDump      (const Node_t* node,                       const char* file, const int line, const char* func);
-void PrintAllNodeInfo (const Node_t* node,                       const char* file, const int line, const char* func);
+void TokenGraphicDump (const Token_t* tokenArr, size_t arrSize, const char* file, const int line, const char* func);
+void TokenTextDump    (const Token_t* token, size_t tokenNum,   const char* file, const int line, const char* func);
 
-#define GRAPHIC_DUMP(node) GraphicDump(node, __FILE__, __LINE__, __func__)
+void TreeDump         (const Node_t* node,                      const char* file, const int line, const char* func);
+void NodeTextDump     (const Node_t* node,                      const char* file, const int line, const char* func);
 
-#define TOKEN_DUMP(tokenArr, arrSize) TokenDump(tokenArr, arrSize, __FILE__, __LINE__, __func__)
+#define TREE_GRAPHIC_DUMP(node) TreeDump     (node, __FILE__, __LINE__, __func__)
+#define TEXT_NODE_DUMP(   node) NodeTextDump (node, __FILE__, __LINE__, __func__)
 
-#define TEXT_DUMP(node) PrintAllNodeInfo(node, __FILE__, __LINE__, __func__)
+#define TOKEN_GRAPHIC_DUMP(tokenArr, arrSize)  TokenGraphicDump(tokenArr, arrSize,  __FILE__, __LINE__, __func__)
+#define TOKEN_TEXT_DUMP(   token,    tokenNum) TokenTextDump   (token,    tokenNum, __FILE__, __LINE__, __func__)
+
 
 #endif

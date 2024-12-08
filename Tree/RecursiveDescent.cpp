@@ -1,21 +1,20 @@
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "Token.h"
 #include "Tree.h"
 #include "TreeDump.h"
 #include "RecursiveDescent.h"
 
-const size_t LEN = 7;
+static Node_t* GetNumber            (const Token_t* token, size_t* tp, const char* input);
+static Node_t* GetVariable          (const Token_t* token, size_t* tp, const char* input);
+static Node_t* GetAddSub            (const Token_t* token, size_t* tp, const char* input);
+static Node_t* GetMulDiv            (const Token_t* token, size_t* tp, const char* input);
+static Node_t* GetBracket           (const Token_t* token, size_t* tp, const char* input);
+static Node_t* GetPow               (const Token_t* token, size_t* tp, const char* input);
 
-static Node_t* GetNumber            (const Token_t* token, size_t* tp);
-static Node_t* GetVariable          (const Token_t* token, size_t* tp);
-static Node_t* GetAddSub            (const Token_t* token, size_t* tp);
-static Node_t* GetMulDiv            (const Token_t* token, size_t* tp);
-static Node_t* GetBracket           (const Token_t* token, size_t* tp);
-static Node_t* GetPow               (const Token_t* token, size_t* tp);
-
-static Node_t* GetFunction          (const Token_t* token, size_t* tp);
-static Node_t* GetMinus             (const Token_t* token, size_t* tp);
+static Node_t* GetFunction          (const Token_t* token, size_t* tp, const char* input);
+static Node_t* GetMinus             (const Token_t* token, size_t* tp, const char* input);
 
 
 static Number    GetTokenNumber     (const Token_t* token, size_t* tp);
@@ -35,18 +34,18 @@ static bool IsPow                   (const Token_t* token, const size_t* tp);
 static bool IsTokenLeftBracket      (const Token_t* token, const size_t* tp);
 static bool IsTokenRightBracket     (const Token_t* token, const size_t* tp);
 static bool IsOperationBeforeMinus  (const Token_t* token, const size_t* tp);
-static bool IsOperationToken        (const Token_t* token,       size_t  tp);
-static bool IsTokenMinus            (const Token_t* token, size_t* tp);
+static bool IsOperationToken        (const Token_t* token, const size_t  tp);
+static bool IsTokenMinus            (const Token_t* token, const size_t* tp);
 
-static void SyntaxError             (const Token_t* token, const char* file, const int line, const char* func);
+static void        SyntaxError (const Token_t* token, const char* input, const char* msg, const char* file, const int line, const char* func);
+static const char* FindNline   (const char* str, size_t nLine);
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static void SyntaxError(const Token_t* token, const char* file, const int line, const char* func)
+static void SyntaxError(const Token_t* token, const char* input, const char* msg, const char* file, const int line, const char* func)
 {
-    COLOR_PRINT(RED, "IN SYNT ERR!\n");
-
     assert(token);
+    assert(msg);
     assert(file);
     assert(func);
 
@@ -55,31 +54,66 @@ static void SyntaxError(const Token_t* token, const char* file, const int line, 
 
     size_t errLine = token->place.line;
     size_t errPos  = token->place.placeInLine;
-    COLOR_PRINT(RED, "\nSyntaxErr in:\n");
-    COLOR_PRINT(WHITE, "line::%lu::%lu\n\n", errLine, errPos);
 
 
-    COLOR_PRINT(VIOLET, "abort() in 3, 2, 1...\n");
-    abort();
+    COLOR_PRINT(RED, "\n%s\n", msg);
+    COLOR_PRINT(WHITE, "line::%lu::%lu;\n\n", errLine, errPos);
+
+    const char* LineWithErr = FindNline(input, errLine);
+
+    printf("%s", LineWithErr);
+
+    for (size_t i = 0; i < errPos; i++) printf(" ");
+
+    printf("^ %s\n", msg);
+
+
+    COLOR_PRINT(VIOLET, "\nabort() in 3, 2, 1...\n");
+    exit(0);
+
     return;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#define SYNTAX_ERR(token) SyntaxError(token, __FILE__, __LINE__, __func__)
+#define SYNTAX_ERR(token, input, msg) SyntaxError(token, input, msg, __FILE__, __LINE__, __func__)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Node_t* GetTree(const Token_t* tokens)
+static const char* FindNline(const char* str, size_t nLine)
+{
+    assert(str);
+
+    nLine--;
+
+    size_t lp = 0;  // line pointer
+    size_t sp = 0;  // str  pointer
+    size_t strLen = strlen(str);
+
+    for (lp = 1; lp < nLine && lp < strLen; sp++)
+    {
+        if (str[sp] == '\n') lp++;
+    }
+
+    if (lp >= strLen)
+    {
+        assert(0 && "str doesn't have stolko lines\n");
+    }
+
+    return str + sp;
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Node_t* GetTree(const Token_t* tokens, const char* input)
 {
     assert(tokens);
 
     size_t tp = 0;
-    Node_t* node = GetAddSub(tokens, &tp);
+    Node_t* node = GetAddSub(tokens, &tp, input);
 
     if (!IsTokenEnd(tokens, &tp))
-        SYNTAX_ERR(&tokens[tp]);
-
+        SYNTAX_ERR(&tokens[tp], input, "Expected '$'");
 
     tp++;
 
@@ -92,13 +126,13 @@ Node_t* GetTree(const Token_t* tokens)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetNumber(const Token_t* token, size_t* tp)
+static Node_t* GetNumber(const Token_t* token, size_t* tp, const char* input)
 {
     assert(token);
     assert(tp);
 
     if (!IsTokenNum(token, tp))
-        SYNTAX_ERR(&token[*tp]);
+        SYNTAX_ERR(&token[*tp], input, "Expected number");
 
     Number val = GetTokenNumber(token, tp);
     (*tp)++;  
@@ -111,13 +145,13 @@ static Node_t* GetNumber(const Token_t* token, size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetVariable(const Token_t* token, size_t* tp)
+static Node_t* GetVariable(const Token_t* token, size_t* tp, const char* input)
 {
     assert(tp);
     assert(token);
     
     if (!IsTokenVariable(token, tp))
-        SYNTAX_ERR(&token[*tp]);
+        SYNTAX_ERR(&token[*tp], input, "Expetcted variable name");
 
     Variable variable = GetTokenVariable(token, tp);
     (*tp)++;
@@ -131,19 +165,24 @@ static Node_t* GetVariable(const Token_t* token, size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetAddSub(const Token_t* token, size_t* tp)
+static Node_t* GetAddSub(const Token_t* token, size_t* tp, const char* input)
 {
     assert(tp);
     assert(token);
 
-    Node_t* node = GetMulDiv(token, tp);
+    size_t old_tp = *tp;
 
+    Node_t* node = GetMulDiv(token, tp, input);
+
+    if (old_tp == *tp)
+        SYNTAX_ERR(&token[*tp], input, "Expected math expression");
+    
     while(IsAddSub(token, tp))
     {
         Operation operation = GetTokenOperation(token, tp);
         (*tp)++;  
 
-        Node_t* node2 = GetMulDiv(token, tp);
+        Node_t* node2 = GetMulDiv(token, tp, input);
         Node_t* new_node = {};
 
         if (operation == Operation::plus)
@@ -158,7 +197,7 @@ static Node_t* GetAddSub(const Token_t* token, size_t* tp)
     
         else
         {
-            assert(0 && "incorrect operation type.");
+            assert(0 && "incorrect operation type");
         }
 
         TREE_ASSERT(SwapNode(&node, &new_node));
@@ -169,19 +208,24 @@ static Node_t* GetAddSub(const Token_t* token, size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetMulDiv(const Token_t* token, size_t* tp)
+static Node_t* GetMulDiv(const Token_t* token, size_t* tp, const char* input)
 {
     assert(tp);
     assert(token);
 
-    Node_t* node = GetPow(token, tp);
+    size_t old_tp = *tp;
+
+    Node_t* node = GetPow(token, tp, input);
+
+    if (old_tp == *tp)
+        SYNTAX_ERR(&token[*tp], input, "Expected math expression");
 
     while (IsMulDiv(token, tp))
     {
         Operation operation = GetTokenOperation(token, tp);
         (*tp)++;  
 
-        Node_t* node2 = GetPow(token, tp);
+        Node_t* node2 = GetPow(token, tp, input);
         Node_t* new_node = {};
     
         if (operation == Operation::mul)
@@ -196,17 +240,18 @@ static Node_t* GetMulDiv(const Token_t* token, size_t* tp)
 
         else
         {
-            assert(0 && "not a */ operation in get mul div.");
+            assert(0 && "not a */ operation in get mul div");
         }
 
         TREE_ASSERT(SwapNode(&node, &new_node));
     }
+
     return node;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetBracket(const Token_t* token, size_t* tp)
+static Node_t* GetBracket(const Token_t* token, size_t* tp, const char* input)
 {
     assert(tp);
     assert(token);
@@ -214,32 +259,32 @@ static Node_t* GetBracket(const Token_t* token, size_t* tp)
     if (IsTokenLeftBracket(token, tp))
     {
         (*tp)++;  
-        Node_t* node = GetAddSub(token, tp);
+        Node_t* node = GetAddSub(token, tp, input);
     
         if (!IsTokenRightBracket(token, tp)) 
-            SYNTAX_ERR(&token[*tp]);
+            SYNTAX_ERR(&token[*tp], input, "Expected ')'");
 
         (*tp)++;  
         return node;
     }
 
-    RETURN_IF_TRUE(IsTokenVariable(token, tp), GetVariable(token, tp));
+    RETURN_IF_TRUE(IsTokenVariable(token, tp), GetVariable(token, tp, input));
 
-    return GetNumber(token, tp);
+    return GetNumber(token, tp, input);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetPow(const Token_t* token, size_t* tp)
+static Node_t* GetPow(const Token_t* token, size_t* tp, const char* input)
 {
     assert(tp);
     assert(token);
 
-    Node_t* node = GetFunction(token, tp);
+    Node_t* node = GetFunction(token, tp, input);
     while(IsPow(token, tp))
     {
         (*tp)++;  
-        Node_t* node2 = GetFunction(token, tp);
+        Node_t* node2 = GetFunction(token, tp, input);
 
         Node_t* new_node = {};
         _POW(&new_node, node, node2);
@@ -251,7 +296,7 @@ static Node_t* GetPow(const Token_t* token, size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetFunction(const Token_t* token, size_t* tp)
+static Node_t* GetFunction(const Token_t* token, size_t* tp, const char* input)
 {
     assert(tp);
     assert(token);
@@ -260,26 +305,29 @@ static Node_t* GetFunction(const Token_t* token, size_t* tp)
 
     if (type != TokenType::Function_t)
     {
-        return GetBracket(token, tp);
+        return GetBracket(token, tp, input);
     }
 
     if (IsTokenMinus(token, tp))
     {
-        return GetMinus(token, tp);
+        return GetMinus(token, tp, input);
     }
 
     Function function = GetTokenFunction(token, tp);
+
+    TOKEN_TEXT_DUMP(token, *tp);
+
     (*tp)++;  
 
     if (!IsTokenLeftBracket(token, tp))
-        SYNTAX_ERR(&token[*tp]);
+        SYNTAX_ERR(&token[*tp], input, "Expected '('");
 
     (*tp)++;  
 
-    Node_t* node = GetAddSub(token, tp);
+    Node_t* node = GetAddSub(token, tp, input);
 
     if (!IsTokenRightBracket(token, tp))
-        SYNTAX_ERR(&token[*tp]);
+        SYNTAX_ERR(&token[*tp], input, "Expected ')'");
 
     (*tp)++;  
 
@@ -287,29 +335,37 @@ static Node_t* GetFunction(const Token_t* token, size_t* tp)
 
     _FUNC(&funcNode, function, node);
 
+    TEXT_NODE_DUMP(funcNode);
+
+
     TREE_ASSERT(SwapNode(&node, &funcNode));
+
+
+
+    printf("\n\n\n\n\n\n\n");
+
 
     return node;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Node_t* GetMinus(const Token_t* token, size_t* tp)
+static Node_t* GetMinus(const Token_t* token, size_t* tp, const char* input)
 {
     assert(token);
     assert(tp);
 
     if (IsOperationBeforeMinus(token, tp))
-        SYNTAX_ERR(&token[*tp]);
+        SYNTAX_ERR(&token[*tp], input, "Operation before '-'");
 
     (*tp)++;  
 
     size_t old_tp = *tp;
 
-    Node_t* node = GetMulDiv(token, tp);
+    Node_t* node = GetMulDiv(token, tp, input);
 
     if (old_tp == *tp)
-        SYNTAX_ERR(&token[*tp]);
+        SYNTAX_ERR(&token[*tp], input, "Nothig after '-'");
 
     Node_t* new_node = {};
     _SUB(&new_node, node, nullptr);
@@ -334,7 +390,7 @@ static bool IsTokenEnd(const Token_t* token, const size_t* tp)
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static bool IsTokenNum(const Token_t* token, const size_t* tp)
-{   
+{
     assert(token);
     assert(tp);
 
@@ -346,7 +402,7 @@ static bool IsTokenNum(const Token_t* token, const size_t* tp)
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static bool IsTokenVariable(const Token_t* token, const size_t* tp)
-{   
+{
     assert(token);
     assert(tp);
 
@@ -358,7 +414,7 @@ static bool IsTokenVariable(const Token_t* token, const size_t* tp)
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static bool IsTokenOperation(const Token_t* token, const size_t* tp)
-{   
+{
     assert(token);
     assert(tp);
 
@@ -448,7 +504,7 @@ static bool IsTokenLeftBracket (const Token_t* token, const size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsTokenMinus(const Token_t* token, size_t* tp)
+static bool IsTokenMinus(const Token_t* token, const size_t* tp)
 {
     assert(token);
     assert(tp);
@@ -493,7 +549,7 @@ static bool IsOperationBeforeMinus(const Token_t* token, const size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static bool IsOperationToken(const Token_t* token,  size_t tp)
+static bool IsOperationToken(const Token_t* token, const size_t tp)
 {
     assert(token);
     assert(tp);
@@ -505,7 +561,7 @@ static bool IsOperationToken(const Token_t* token,  size_t tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Number GetTokenNumber(const Token_t* token, size_t* tp)
+static Number GetTokenNumber(const Token_t* token, const size_t* tp)
 {
     assert(token);
     assert(tp);
@@ -517,7 +573,7 @@ static Number GetTokenNumber(const Token_t* token, size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Variable GetTokenVariable(const Token_t* token, size_t* tp)
+static Variable GetTokenVariable(const Token_t* token, const size_t* tp)
 {
     assert(token);
     assert(tp);
@@ -530,7 +586,7 @@ static Variable GetTokenVariable(const Token_t* token, size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Operation GetTokenOperation(const Token_t* token, size_t* tp)
+static Operation GetTokenOperation(const Token_t* token, const size_t* tp)
 {
     assert(token);
     assert(tp);
@@ -542,7 +598,7 @@ static Operation GetTokenOperation(const Token_t* token, size_t* tp)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Function GetTokenFunction(const Token_t* token, size_t* tp)
+static Function GetTokenFunction(const Token_t* token, const size_t* tp)
 {
     assert(token);
     assert(tp);

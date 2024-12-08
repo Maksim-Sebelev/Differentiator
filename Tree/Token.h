@@ -55,7 +55,6 @@ struct Token_t
 };
 
 
-
 Token_t* ReadInputStr   (const char* input, size_t* tokenArrSize);
 void     TokenDtor      (Token_t* tokenArr);
 

@@ -10,7 +10,7 @@ void PrintPlace(const char* const file, const int line, const char* const func)
     assert(file);
     assert(func);
 
-    COLOR_PRINT(WHITE, "File [%s]\nLine [%d]\nFunc [%s]\n", file, line, func);
+    printf("File [%s]\nLine [%d]\nFunc [%s]\n", file, line, func);
     return;
 }
 

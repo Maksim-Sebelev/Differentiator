@@ -5,6 +5,6 @@
 #include "Tree.h"
 #include "Token.h"
 
-Node_t* GetTree(const Token_t* tokens);
+Node_t* GetTree(const Token_t* tokens, const char* input);
 
 #endif
