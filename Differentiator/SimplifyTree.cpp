@@ -720,10 +720,7 @@ static bool IsSomeToSimplifyInNodeTypeOperation(const Node_t* node)
         assert(0 && "Division by zero.");
     }
 
-    if (secondNum == 0)
-    {
-        return flag1;
-    }
+    RETURN_IF_TRUE(secondNum == 0, flag1);
 
     bool flag2 = (firstNum % secondNum == 0);
 

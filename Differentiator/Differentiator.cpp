@@ -566,5 +566,30 @@ static TreeErr HandleDiffCth(Node_t** node)
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 
+
+static TreeErr HandleDiffArcsin(Node_t** node)
+{
+    assert(node);
+    assert(*node);
+
+    TreeErr err = {};
+    NODE_RETURN_IF_ERR(*node, err);
+
+    Node_t* new_left  = {};
+    Node_t* new_right = {};
+
+
+
+
+    
+    _NUM(&new_left, 1);
+
+    _SET_DIV(*node, new_left, new_right);
+
+    return NODE_VERIF(*node, err);
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------
+
 #undef _L
 #undef _R

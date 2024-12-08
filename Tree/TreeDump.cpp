@@ -639,18 +639,12 @@ static const char* GetVariableInStr(Variable var)
 
 static const char* GetOperationInStr(Operation oper)
 {
-    switch (oper)
+    for (size_t i = 0; i < DefaultOperationsQuant; i++)
     {
-        case Operation::plus:    return "+";
-        case Operation::minus:   return "-";
-        case Operation::mul:     return "*";
-        case Operation::dive:    return "/";
-        case Operation::power:   return "^";
-        case Operation::undefined_operation:                                        return "undefined";
-        default: assert(0 && "You forgot about some opeartion in graphic dump.\n"); return "undefined";
+        RETURN_IF_TRUE(oper == DefaultOperations[i].value, DefaultOperations[i].name);
     }
 
-    assert(0 && "We must not be here.\n");
+    assert(0 && "you forgot about some operation.\n");
     return "wtf?";
 }
 
@@ -658,27 +652,13 @@ static const char* GetOperationInStr(Operation oper)
 
 static const char* GetFuncInStr(Function func)
 {
-    switch (func)
+    for (size_t i = 0; i < DefaultFunctionsQuant; i++)
     {
-        case Function::ln:       return "ln";
-        case Function::sin:      return "sin";
-        case Function::cos:      return "cos";
-        case Function::tg:       return "tg";
-        case Function::ctg:      return "ctg";
-        case Function::sh:       return "sh";
-        case Function::ch:       return "ch";
-        case Function::th:       return "th";
-        case Function::cth:      return "cth";
-        case Function::arcsin:   return "arcsin";
-        case Function::arccos:   return "arccos";
-        case Function::arctg:    return "arctg";
-        case Function::arcctg:   return "arccrg";
-        case Function::undefined_function: return "undefined";
-        default: assert(0 && "You forgot abourt some function in graphic dump.\n"); return "undefined";
+        RETURN_IF_TRUE(func == DefaultFunctions[i].value, DefaultFunctions[i].name);
     }
 
-    assert(0 && "We must not be here.\n");
-    return "wtf?";
+    assert(0 && "You forgot abourt some function in graphic dump.\n"); 
+    return "undefined";
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

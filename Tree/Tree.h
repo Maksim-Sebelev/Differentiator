@@ -65,6 +65,7 @@ enum Operation
 enum Function
 {
     undefined_function,
+    sqrt,
     ln,
     sin,
     cos,
@@ -211,6 +212,67 @@ TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* fi
 
 
 void TreeAssertPrint(TreeErr* Err, const char* File, int Line, const char* Func);
+
+
+
+
+
+
+struct DefaultFunction
+{
+    const char* name;
+    Function    value;
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static DefaultFunction DefaultFunctions[]
+{
+    {"sqrt"  , Function::sqrt  },
+    {"ln"    , Function::ln    },
+    {"sin"   , Function::sin   },
+    {"cos"   , Function::cos   },
+    {"tg"    , Function::tg    },
+    {"ctg"   , Function::ctg   },
+    {"sh"    , Function::sh    },
+    {"ch"    , Function::ch    },
+    {"th"    , Function::th    },
+    {"cth"   , Function::cth   },
+    {"arcsin", Function::arcsin},
+    {"arccos", Function::arccos},
+    {"arctg" , Function::arctg },
+    {"arcctg", Function::arcctg},
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+const size_t DefaultFunctionsQuant = sizeof(DefaultFunctions) / sizeof(DefaultFunctions[0]);
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+struct DefaultOperation
+{
+    const char* name;
+    Operation   value;
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static DefaultOperation DefaultOperations[]
+{
+    {"+", Operation::plus },
+    {"-", Operation::minus},
+    {"*", Operation::mul  },
+    {"/", Operation::dive },
+    {"^", Operation::power},
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+const size_t DefaultOperationsQuant = sizeof(DefaultOperations) / sizeof(DefaultOperations[0]);
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 #endif
