@@ -95,7 +95,7 @@ static TreeErr SimplifyTreeHelper(Node_t* node)
 
     else if (type == NodeArgType::function)
     {
-        TREE_ASSERT(SimplifyFunction(node));
+        TREE_ASSERT(SimplifyFunction(node));    
     }
 
     return NODE_VERIF(node, err);
@@ -256,19 +256,16 @@ static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal1(Node_t* node)
     assert(node->left);
     assert(node->right);
     assert(IsTypeOperation(node));
-    assert(node->left->data.num == 1 || node->right->data.num == 1);
+    assert((IsTypeNum(node->left) && node->left->data.num == 1) || (IsTypeNum(node->right) && node->right->data.num == 1));
 
     TreeErr err = {};
 
-    Number firstNum  = node->left->data.num;
-    Number secondNum = node->right->data.num;
-    
-    if (firstNum == 1)
+    if (IsTypeNum(node->left) && (node->left->data.num == 1))
     {
         TREE_ASSERT(SimplifyNodeTypeOperationWithLeftChildTypeNumVal1(node));
     }
 
-    else if (secondNum == 1)
+    else if (IsTypeNum(node->right) && (node->right->data.num == 1))
     {
         TREE_ASSERT(SimplifyNodeTypeOperationWithRightChildTypeNumVal1(node));
     }
@@ -686,16 +683,23 @@ static bool HasNode1ChildTypeNumVal1(const Node_t* node)
 {
     assert(node);
 
-    Number leftNum  = 0;
-    Number rightNum = 0;
+    bool flag1 = false;
+    bool flag2 = false;
 
-    if (node->left)  leftNum  = node->left ->data.num;
-    if (node->right) rightNum = node->right->data.num;
+    if (node->left && node->left->type == NodeArgType::number)
+    {
+        Number number = node->left->data.num;
+        if (number == 1) flag1 = true;
+    }
 
-    bool flag1 = ((node->left && IsTypeNum(node->left)) || (node->right && IsTypeNum(node->right)));
-    bool flag2 = ((leftNum == 1) || (rightNum == 1));
+    if (node->right && node->right->type == NodeArgType::number)
+    {
+        Number number = node->right->data.num;
+        if (number == 1) flag2 = true;
+    }
 
-    return (flag1 && flag2);
+    return flag1 || flag2;
+
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------

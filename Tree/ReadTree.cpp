@@ -191,6 +191,7 @@ static void strnprintf(const char* str, size_t n)
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //=============================== Tokens (Read Tree) =======================================================================================================================================================================================
 
+
 Token_t* ReadInputStr(const char* input, size_t* tokenArrSize)
 {
     assert(input);
@@ -814,7 +815,7 @@ static Node_t* GetFunction(const Token_t* token, size_t* tp, const char* input)
     Node_t* funcNode = {};
 
     _FUNC(&funcNode, function, node);
-    
+
     TREE_ASSERT(SwapNode(&node, &funcNode));
 
     return node;

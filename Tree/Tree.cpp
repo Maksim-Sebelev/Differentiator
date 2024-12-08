@@ -105,7 +105,6 @@ TreeErr NodeCtor(Node_t** node, NodeArgType type, NodeData_t data, Node_t* left,
     (*node)->left      = left;
     (*node)->right     = right;
 
-
     return NODE_VERIF(*node, err);
 }
 
@@ -407,6 +406,7 @@ static bool IsNodeTypeFunctionDataCorrect(const Node_t* node)
 
     switch (fucntion)
     {
+        case Function::sqrt:
         case Function::ln:
         case Function::sin:
         case Function::cos:
@@ -525,7 +525,7 @@ static void PrintError(const TreeErr* Err)
             break;
 
         case TreeErrorType::OPER_TYPE_NODES_ARG_IS_UNDEFINED:
-            COLOR_PRINT(RED, "Error: Node has 'operation' type, but arg is undefinef.\n");
+            COLOR_PRINT(RED, "Error: Node has 'operation' type, but arg is undefined.\n");
             break;
 
         case TreeErrorType::OPER_HAS_INCORRECT_CHILD_QUANT:
@@ -533,7 +533,7 @@ static void PrintError(const TreeErr* Err)
             break;
 
         case TreeErrorType::FUNC_TYPE_NODES_ARG_IS_UNDEFINED:
-            COLOR_PRINT(RED, "Error: Node has 'function' type, but arg is undefinef type.\n");
+            COLOR_PRINT(RED, "Error: Node has 'function' type, but arg is undefined type.\n");
             break;
 
         case TreeErrorType::FUNC_HAS_INCORRECT_CHILD_QUANT:

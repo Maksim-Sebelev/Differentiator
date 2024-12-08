@@ -22,6 +22,7 @@ static TreeErr HandleDiffPow             (Node_t** node);
 
 static TreeErr HandleDiffFunctionHelper  (Node_t** node);
 static TreeErr HandleDiffLn              (Node_t** node);
+static TreeErr HandleDiffSqrt            (Node_t** node);
 static TreeErr HandleDiffSin             (Node_t** node);
 static TreeErr HandleDiffCos             (Node_t** node);
 static TreeErr HandleDiffTg              (Node_t** node);
@@ -329,15 +330,16 @@ static TreeErr HandleDiffFunctionHelper(Node_t** node)
 
     switch (function)
     {
-        case Function::ln:       TREE_ASSERT(HandleDiffLn(node));                                  break;
-        case Function::sin:      TREE_ASSERT(HandleDiffSin(node));                                 break;
-        case Function::cos:      TREE_ASSERT(HandleDiffCos(node));                                 break;
-        case Function::tg:       TREE_ASSERT(HandleDiffTg(node));                                  break;
-        case Function::ctg:      TREE_ASSERT(HandleDiffCtg(node));                                 break;
-        case Function::sh:       TREE_ASSERT(HandleDiffSh(node));                                  break;
-        case Function::ch:       TREE_ASSERT(HandleDiffCh(node));                                  break;
-        case Function::th:       TREE_ASSERT(HandleDiffTh(node));                                  break;
-        case Function::cth:      TREE_ASSERT(HandleDiffCth(node));                                 break;
+        case Function::sqrt:     TREE_ASSERT(HandleDiffSqrt(node));                                break;
+        case Function::ln:       TREE_ASSERT(HandleDiffLn  (node));                                break;
+        case Function::sin:      TREE_ASSERT(HandleDiffSin (node));                                break;
+        case Function::cos:      TREE_ASSERT(HandleDiffCos (node));                                break;
+        case Function::tg:       TREE_ASSERT(HandleDiffTg  (node));                                break;
+        case Function::ctg:      TREE_ASSERT(HandleDiffCtg (node));                                break;
+        case Function::sh:       TREE_ASSERT(HandleDiffSh  (node));                                break;
+        case Function::ch:       TREE_ASSERT(HandleDiffCh  (node));                                break;
+        case Function::th:       TREE_ASSERT(HandleDiffTh  (node));                                break;
+        case Function::cth:      TREE_ASSERT(HandleDiffCth (node));                                break;
         case Function::arcsin:   assert(0 && "you forgot to add this function in switch.\n");      break;
         case Function::arccos:   assert(0 && "you forgot to add this function in switch.\n");      break;
         case Function::arctg:    assert(0 && "you forgot to add this function in switch.\n");      break;
@@ -363,6 +365,37 @@ static TreeErr HandleDiffLn(Node_t** node)
 
     _NUM(&new_left, 1);
     new_right = _L;
+
+    _SET_DIV(*node, new_left, new_right);
+
+    return NODE_VERIF(*node, err);
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------
+
+static TreeErr HandleDiffSqrt(Node_t** node)
+{
+    assert(node);
+    assert(*node);
+
+    TreeErr err = {};
+
+    Node_t* new_left  = {}; // 1
+    Node_t* new_right = {}; // *
+    
+    Node_t* new_right_left  = {}; // 2
+    Node_t* new_right_right = {}; // sqrt
+
+    Node_t* new_right_right_left  = {}; // x
+
+
+    new_right_right_left = _L;
+
+    _NUM  (&new_right_left,  2);
+    _FUNC (&new_right_right, Function::sqrt, new_right_right_left);
+
+    _NUM(&new_left, 1);
+    _MUL(&new_right, new_right_left, new_right_right);
 
     _SET_DIV(*node, new_left, new_right);
 
@@ -581,7 +614,7 @@ static TreeErr HandleDiffArcsin(Node_t** node)
 
 
 
-    
+
     _NUM(&new_left, 1);
 
     _SET_DIV(*node, new_left, new_right);
