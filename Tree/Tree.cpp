@@ -3,8 +3,7 @@
 #include <string.h>
 #include "Tree.h"
 #include "TreeDump.h"
-#include "Token.h"
-#include "RecursiveDescent.h"
+#include "ReadTree.h"
 #include "../Common/ColorPrint.h"
 #include "../Common/GlobalInclude.h"
 
@@ -15,8 +14,8 @@ static bool         HasntVarChild                  (const Node_t* node);
 static bool         HasOperationChildren           (const Node_t* node);
 static bool         HasFuncLeftChildOnly           (const Node_t* node);
 
-static bool         IsNodeTypeOperationDataCorrect            (const Node_t* node);
-static bool         IsNodeTypeFunctionDataCorrect            (const Node_t* node);
+static bool         IsNodeTypeOperationDataCorrect (const Node_t* node);
+static bool         IsNodeTypeFunctionDataCorrect  (const Node_t* node);
 static bool         IsNodeVariableTypeUndef        (const Node_t* node);
 
 //======================================================================================================================================================================
@@ -174,7 +173,6 @@ TreeErr NodeSetCopy(Node_t* copy, const Node_t* node)
     
     Node_t*     left       = node->left;
     Node_t*     right      = node->right;
-
 
     switch (type)
     {

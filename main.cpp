@@ -5,13 +5,13 @@
 #include "Differentiator/SimplifyTree.h"
 #include "Differentiator/Taylor.h"
 
-#include "Tree/RecursiveDescent.h"
+#include "Tree/ReadTree.h"
 
 int main()
 {
     Tree_t tree = {};
 
-    const char* input = "x*(x+21$";
+    const char* input = "-x/tg(sh(x)) * 3 +1/(-x) + sin(2^x - x)^(1/tg(cos(ln(sin(x^sin(x))))))$";
 
     TREE_ASSERT(TreeCtor(&tree, input));
     TREE_GRAPHIC_DUMP(tree.root);

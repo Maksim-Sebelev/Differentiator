@@ -4,7 +4,7 @@ CFLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loo
 
 SOURCES = main.cpp Differentiator/Differentiator.cpp Tree/Tree.cpp Common/GlobalInclude.cpp \
 		  Tree/TreeDump.cpp Differentiator/SimplifyTree.cpp Differentiator/Taylor.cpp 		 \
-		  Tree/RecursiveDescent.cpp Tree/Token.cpp 											  \
+		  Tree/ReadTree.cpp 			 										         	  \
 
 HEADERS = $(SOURCES:.cpp=.h)
 OBJECTS = $(SOURCES:.cpp=.o)

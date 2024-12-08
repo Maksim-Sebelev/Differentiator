@@ -3,7 +3,8 @@
 #include <assert.h>
 #include "TreeDump.h"
 #include "Tree.h"
-#include "Token.h"
+#include "ReadTree.h"
+#include "../Common/GlobalInclude.h"
 
 
 static void TokenGraphicDumpHelper(const Token_t* tokenArr, size_t arrSize, const char* dotFileName, const char* file, const int line, const char* func);
@@ -109,7 +110,7 @@ static void TokenGraphicDumpHelper(const Token_t* tokenArr, size_t arrSize, cons
 static void DotTokenBegin(FILE* dotFile)
 {
     assert(dotFile);
-    fprintf(dotFile, "digraph G{\nrankdir=TB\ngraph [bgcolor=\"#000000\"];\n");
+    fprintf(dotFile, "digraph G{\nrankdir=TB\ngraph [bgcolor=\"#000000\"];\nsize = \"100 5\"\n");
     return;
 }
 
@@ -312,7 +313,18 @@ void NodeTextDump(const Node_t* node, const char* file, const int line, const ch
     }
 
     COLOR_PRINT(CYAN,  "type = '%s'\n", GetNodeTypeInStr  (node));
-    COLOR_PRINT(CYAN,  "data = '%s'\n", GetNodeDataInStr(node));
+
+    NodeArgType type = node->type;
+
+    if (type == NodeArgType::number)
+    {
+        COLOR_PRINT(CYAN, "data = '%d'\n", node->data.num);
+    }
+
+    else
+    {
+        COLOR_PRINT(CYAN,  "data = '%s'\n", GetNodeDataInStr(node));
+    }
 
     COLOR_PRINT(VIOLET, "left  = %p\n", node->left);
     COLOR_PRINT(VIOLET, "right = %p\n", node->right);
@@ -363,7 +375,7 @@ static void TreeDumpHelper(const Node_t* node, const char* dotFileName, const ch
 
     DotNodeBegin(dotFile);
 
-    // DotCreateDumpPlace(dotFile, file, line, func);
+    DotCreateDumpPlace(dotFile, file, line, func);
 
     DotCreateAllNodes(dotFile, node);
     DotCreateEdges(dotFile, node);
@@ -474,9 +486,9 @@ static const char* GetNodeColor(const Node_t* node)
     switch (type)
     {
         case NodeArgType::number:    return "#1662b7";
-        case NodeArgType::operation: return "#178b38";
+        case NodeArgType::operation: return "#177d20";
         case NodeArgType::variable:  return "#832316";
-        case NodeArgType::function:  return "#1da517";
+        case NodeArgType::function:  return "#218617";
         case NodeArgType::undefined: return "red";
         default:
             assert(0 && "undefined situation in GetColorType.\n");

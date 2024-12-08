@@ -394,7 +394,7 @@ static TreeErr SimplifyLeftChildTypeNumVal0(Node_t* node)
         case Operation::dive:
         case Operation::power: TREE_ASSERT(ReamakeNodeToTypeNumVal0(node));                         break;
         case Operation::plus:  TREE_ASSERT(SetNodeRightChild(node));                                break;
-        case Operation::minus: TREE_ASSERT(SwapNode(&node->left, &node->right)); FREE(node->left);  break;
+        case Operation::minus: TREE_ASSERT(SwapNode(&node->left, &node->right)); FREE(node->right); break;
         case Operation::undefined_operation: err.err = UNDEFINED_OPERATION_TYPE;                    break;
         default: assert(0 && "You forgot about some operation.\n");                                 break;
     }
