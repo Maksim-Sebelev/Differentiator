@@ -191,6 +191,60 @@ static void strnprintf(const char* str, size_t n)
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //=============================== Tokens (Read Tree) =======================================================================================================================================================================================
 
+struct DefaultFunction
+{
+    const char* name;
+    Function    value;
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static DefaultFunction DefaultFunctions[]
+{
+    {"ln"    , Function::ln    },
+    {"sin"   , Function::sin   },
+    {"cos"   , Function::cos   },
+    {"tg"    , Function::tg    },
+    {"ctg"   , Function::ctg   },
+    {"sh"    , Function::sh    },
+    {"ch"    , Function::ch    },
+    {"th"    , Function::th    },
+    {"cth"   , Function::cth   },
+    {"arcsin", Function::arcsin},
+    {"arccos", Function::arccos},
+    {"arctg" , Function::arctg },
+    {"arcctg", Function::arcctg},
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static size_t DefaultFunctionsQuant = sizeof(DefaultFunctions) / sizeof(DefaultFunctions[0]);
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+struct DefaultOperation
+{
+    const char* name;
+    Operation   value;
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static DefaultOperation DefaultOperations[]
+{
+    {"+", Operation::plus },
+    {"-", Operation::minus},
+    {"*", Operation::mul  },
+    {"/", Operation::dive },
+    {"^", Operation::power},
+};
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+static size_t DefaultOperationsQuant = sizeof(DefaultOperations) / sizeof(DefaultOperations[0]);
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Token_t* ReadInputStr(const char* input, size_t* tokenArrSize)
 {
@@ -202,7 +256,7 @@ Token_t* ReadInputStr(const char* input, size_t* tokenArrSize)
 
     Token_t* tokenArr = (Token_t*) calloc(inputLen, sizeof(*tokenArr));
 
-    Pointers pointer = {};
+    Pointers pointer = {0, 0, 1, 1};
 
     while (pointer.ip < inputLen)
     {
@@ -246,8 +300,8 @@ static void TokenCtor(Token_t* token, TokenType type, void* value, size_t fileLi
 
     token->type = type;
 
-    token->place.line        = fileLine + 1;
-    token->place.placeInLine = linePos  + 1;
+    token->place.line        = fileLine;
+    token->place.placeInLine = linePos;
 
     switch (type)
     {
@@ -430,7 +484,11 @@ static Number UpdateNumber(Number number, const char* input, Pointers* pointer)
 
     Number new_digit = new_digit_char - '0';
 
-    if ((INT_MAX - new_digit) / 10 < new_digit)
+    assert(0 <= new_digit);
+    assert(9 >= new_digit);
+
+
+    if ((INT_MAX - new_digit) / 10 < number)
     {
         SYNTAX_ERR(pointer->lp, pointer->sp, input, "Integer overflow");
     }
@@ -519,22 +577,24 @@ static bool IsPassSymbol(char c, Pointers* pointer)
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#define STRCMP(oper) (strncmp(operation + pointer->ip, oper, strlen(oper)) == 0)
+#define STRNCMP(oper) (strncmp(operation + pointer->ip, oper, strlen(oper)) == 0)
 
 static Operation GetOperation(const char* operation, Pointers* pointer, size_t* operationSize)
 {
     assert(operation);
 
-    RETURN_IF_TRUE(STRCMP("+"), Operation::plus , *operationSize = 1);
-    RETURN_IF_TRUE(STRCMP("-"), Operation::minus, *operationSize = 1);
-    RETURN_IF_TRUE(STRCMP("*"), Operation::mul  , *operationSize = 1);
-    RETURN_IF_TRUE(STRCMP("/"), Operation::dive , *operationSize = 1);
-    RETURN_IF_TRUE(STRCMP("^"), Operation::power, *operationSize = 1);
+    for (size_t operation_i = 0; operation_i < DefaultOperationsQuant; operation_i++)
+    {
+        const char* name = DefaultOperations[operation_i].name;
+        Operation   oper = DefaultOperations[operation_i].value;
+    
+        RETURN_IF_TRUE(STRNCMP(name), oper, *operationSize = 1);
+    }
 
     return Operation::undefined_operation;
 } 
 
-#undef STRCMP
+#undef STRNCMP
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -544,19 +604,13 @@ static Function GetFunction(const char* word, size_t wordSize)
 {
     assert(word);
 
-    RETURN_IF_TRUE(STRNCMP("ln")    , Function::ln    );
-    RETURN_IF_TRUE(STRNCMP("sin")   , Function::sin   );
-    RETURN_IF_TRUE(STRNCMP("cos")   , Function::cos   );
-    RETURN_IF_TRUE(STRNCMP("tg")    , Function::tg    );
-    RETURN_IF_TRUE(STRNCMP("ctg")   , Function::ctg   );
-    RETURN_IF_TRUE(STRNCMP("sh")    , Function::sh    );
-    RETURN_IF_TRUE(STRNCMP("ch")    , Function::ch    );
-    RETURN_IF_TRUE(STRNCMP("th")    , Function::th    );
-    RETURN_IF_TRUE(STRNCMP("cth")   , Function::cth   );
-    RETURN_IF_TRUE(STRNCMP("arcsin"), Function::arcsin);
-    RETURN_IF_TRUE(STRNCMP("arccos"), Function::arccos);
-    RETURN_IF_TRUE(STRNCMP("arctg") , Function::arctg );
-    RETURN_IF_TRUE(STRNCMP("arcctg"), Function::arcctg);
+    for (size_t function_i = 0; function_i < DefaultFunctionsQuant; function_i++)
+    {
+        const char* name = DefaultFunctions[function_i].name;
+        Function    func = DefaultFunctions[function_i].value;
+    
+        RETURN_IF_TRUE(STRNCMP(name), func);
+    }
 
     return Function::undefined_function;
 }
@@ -615,6 +669,7 @@ static Node_t* GetNumber(const Token_t* token, size_t* tp, const char* input)
 
     if (!IsTokenNum(token, tp))
         SYNTAX_ERR_FOR_TOKEN(token[*tp], input, "expected number");
+    
     Number val = GetTokenNumber(token, tp);
     (*tp)++;  
 
@@ -788,6 +843,7 @@ static Node_t* GetFunction(const Token_t* token, size_t* tp, const char* input)
     {
         return GetMinus(token, tp, input);
     }
+
 
     if (type != TokenType::Function_t)
     {
@@ -984,7 +1040,7 @@ static bool IsTokenMinus(const Token_t* token, const size_t* tp)
 
     RETURN_IF_FALSE(type == TokenType::Operation_t, false);
 
-    Operation operation = token->data.operation;
+    Operation operation = token[*tp].data.operation;
 
     return (operation == Operation::minus);
 }
@@ -1014,8 +1070,7 @@ static bool IsOperationBeforeMinus(const Token_t* token, const size_t* tp)
     assert(IsOperationToken(token, *tp));
     assert(token[*tp].data.operation == Operation::minus);
 
-    return (*tp >= 1 && IsOperationToken(token, *tp - 1));
-    
+    return (*tp == 0) || (*tp >= 1 && IsOperationToken(token, *tp - 1));   
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

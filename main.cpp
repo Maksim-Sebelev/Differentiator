@@ -11,7 +11,8 @@ int main()
 {
     Tree_t tree = {};
 
-    const char* input = "-x/tg(sh(x)) * 3 +1/(-x) + sin(2^x - x)^(1/tg(cos(ln(sin(x^sin(x))))))$";
+    // const char* input = "-x/tg(sh(x)) * 3 +1/(-x) + sin(2^x - x)^( 1/tg ( cos ( ln ( sin ( x^sin(x) ) ^ 3 ) ) - 1/(x^2) ) )$";
+    const char* input = "1+2+3+4$";
 
     TREE_ASSERT(TreeCtor(&tree, input));
     TREE_GRAPHIC_DUMP(tree.root);

@@ -49,7 +49,16 @@ void TokenTextDump(const Token_t* tokenArr, size_t tokenNum, const char* file, c
     COLOR_PRINT(GREEN, "\n\ntoken[%lu]:\n", tokenNum);
 
     COLOR_PRINT(CYAN, "type: '%s'\n", GetTokenTypeInStr(&tokenArr[tokenNum]));
-    COLOR_PRINT(CYAN, "data: '%s'\n", GetTokenDataInStr(&tokenArr[tokenNum]));
+
+    if (tokenArr[tokenNum].type == TokenType::Number_t)
+    {
+        COLOR_PRINT(CYAN, "data: '%d'\n", tokenArr[tokenNum].data.number);
+    }
+
+    else
+    {
+        COLOR_PRINT(CYAN, "data: '%s'\n", GetTokenDataInStr(&tokenArr[tokenNum]));
+    }
 
     COLOR_PRINT(GREEN, "\nToken Dump End.\n\n\n");
 
