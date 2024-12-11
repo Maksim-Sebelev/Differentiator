@@ -23,12 +23,12 @@ static void DotEnd                (FILE* dotFile);
 static void DotCreateAllNodes     (FILE* dotFile, const Node_t* node);
 static void DotCreateEdges        (FILE* dotFile, const Node_t* node);
 static void DotCreateEdgesHelper  (FILE* dotFile, const Node_t* node);
-static void DotCreateDumpPlace    (FILE* dotFile, const char* file, const int line, const char* func);
-static void TreeDumpHelper     (const Node_t* node, const char* dotFileName, const char* file, const int line, const char* func);
+static void DotCreateDumpPlace    (FILE* dotFile,                               const char* file, const int line, const char* func);
+static void TreeDumpHelper        (const Node_t* node, const char* dotFileName, const char* file, const int line, const char* func);
 
 static const char* GetNodeColor       (const Node_t* node);
 static const char* GetNodeTypeInStr   (const Node_t* node);
-static const char* GetNodeDataInStr    (const Node_t* node);
+static const char* GetNodeDataInStr   (const Node_t* node);
 static const char* GetVariableInStr   (Variable var);
 static const char* GetOperationInStr  (Operation oper);
 static const char* GetFuncInStr       (Function func);

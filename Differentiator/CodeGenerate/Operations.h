@@ -1,0 +1,5 @@
+#ifndef GENERATE_OPERATION_CMD
+#define GENERATE_OPERATION_CMD(...)
+#endif
+
+

@@ -254,30 +254,30 @@ static TreeErr HandleDiffPow(Node_t** node)
     TreeErr err = {};
     RETURN_IF_FALSE(*node, err);
 
-    if (IsNodeConst(_R))
-    {
-        Node_t* new_left  = {}; // num - 1
-        Node_t* new_right = {}; // ^ ( x num-1 )
+    // if (IsNodeConst(_R))
+    // {
+    //     Node_t* new_left  = {}; // num - 1
+    //     Node_t* new_right = {}; // ^ ( x num-1 )
 
-        Node_t* new_right_left  = {}; // x
-        Node_t* new_right_right = {}; // -
+    //     Node_t* new_right_left  = {}; // x
+    //     Node_t* new_right_right = {}; // -
 
-        Node_t* new_right_right_left  = {}; // num
-        Node_t* new_right_right_right = {}; // 1
+    //     Node_t* new_right_right_left  = {}; // num
+    //     Node_t* new_right_right_right = {}; // 1
 
-        new_right_right_left = _R;
-        _NUM(&new_right_right_right, 1);
+    //     new_right_right_left = _R;
+    //     _NUM(&new_right_right_right, 1);
 
-        new_right_left = _L;
-        _SUB(&new_right_right, new_right_right_left, new_right_right_right);
+    //     new_right_left = _L;
+    //     _SUB(&new_right_right, new_right_right_left, new_right_right_right);
 
-        TREE_ASSERT(NodeCopy(&new_left, _R));
-        _POW(&new_right, new_right_left, new_right_right);
+    //     TREE_ASSERT(NodeCopy(&new_left, _R));
+    //     _POW(&new_right, new_right_left, new_right_right);
 
-        _SET_MUL(*node, new_left, new_right);
+    //     _SET_MUL(*node, new_left, new_right);
 
-        return NODE_VERIF(*node, err);
-    }
+    //     return NODE_VERIF(*node, err);
+    // }
 
     Node_t* new_left  = {}; // ^ f g
     Node_t* new_right = {}; // + * *

@@ -213,13 +213,16 @@ Token_t* ReadInputStr(const char* input, size_t* tokenArrSize)
         else if (IsLetterSymbol    (input, pointer.ip))    HandleLetter    (input, tokenArr, &pointer);
         else if (IsBracketSymbol   (input, pointer.ip))    HandleBracket   (input, tokenArr, &pointer);
         else if (IsEndSymbol       (input, pointer.ip))    HandleEndSymbol (input, tokenArr, &pointer);
-        else                                               assert(0 && "undefined symbol.");
+        else    SYNTAX_ERR(pointer.lp, pointer.sp, input, "undefined word in input.");
     }
 
     *tokenArrSize = pointer.tp;
+
     assert(*tokenArrSize > 0);
-    assert(tokenArr);
+    assert(tokenArr); 
+  
     tokenArr = (Token_t*) realloc(tokenArr, *tokenArrSize * sizeof(Token_t));
+  
     assert(tokenArr);
 
     return tokenArr;
@@ -327,7 +330,7 @@ static void HandleLetter(const char* input, Token_t* tokenArr, Pointers* pointer
         return;
     }
 
-    assert(0 && "undefined word in input.");
+    SYNTAX_ERR(pointer->lp, pointer->sp, input, "undefined name in input.");
     return;
 }
 
@@ -517,7 +520,7 @@ static bool IsPassSymbol(char c, Pointers* pointer)
 {
     assert(pointer);
     RETURN_IF_TRUE(IsSpace(c),  true, pointer->sp++, pointer->ip++);
-    RETURN_IF_TRUE(IsSlashN(c), true, pointer->lp++, pointer->ip++, pointer->sp = 0);
+    RETURN_IF_TRUE(IsSlashN(c), true, pointer->lp++, pointer->ip++, pointer->sp = 1);
     return false;
 }
 
@@ -614,7 +617,7 @@ static Node_t* GetNumber(const Token_t* token, size_t* tp, const char* input)
     assert(tp);
 
     if (!IsTokenNum(token, tp))
-        SYNTAX_ERR_FOR_TOKEN(token[*tp], input, "expected number");
+        SYNTAX_ERR_FOR_TOKEN(token[*tp], input, "expected math expressiion");
     
     Number val = GetTokenNumber(token, tp);
     (*tp)++;  
