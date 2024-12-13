@@ -1,0 +1,19 @@
+# Fdb version 4
+["pdflatex"] 1734062494.40472 "/home/ananasik/Рабочий стол/projects/Differentiator/first.tex" "first.pdf" "first" 1734062494.80333 0
+  "/etc/texmf/web2c/texmf.cnf" 1734060360.49635 475 c0e671620eb5563b2130f56340a5fde8 ""
+  "/home/ananasik/Рабочий стол/projects/Differentiator/first.tex" 1734062494.17401 147 6f251fe309d4a706d16649e79260c6a7 ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1248133631 35752 024fb6c41858982481f6968b5fc26508 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/article.cls" 1705352648 20144 147463a6a579f4597269ef9565205cfe ""
+  "/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo" 1705352648 8448 dbc0dbf4156c0bb9ba01a1c685d3bad0 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def" 1704491087 30006 57b07afb710ee2f649c65cfbafda39c1 ""
+  "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
+  "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
+  "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1734060381.24484 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
+  "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1734060431 8213034 c744519ece439108facb4fd9acaa58e2 ""
+  "first.aux" 1734062494.77005 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "first.tex" 1734062494.17401 147 6f251fe309d4a706d16649e79260c6a7 ""
+  (generated)
+  "first.aux"
+  "first.log"
+  "first.pdf"
+  (rewritten before read)

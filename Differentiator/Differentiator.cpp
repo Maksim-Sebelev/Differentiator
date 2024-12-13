@@ -250,34 +250,49 @@ static TreeErr HandleDiffPow(Node_t** node)
     assert(*node);
     assert(_L);
     assert(_R);
+    assert((*node)->type == NodeArgType::operation);
+    assert((*node)->data.oper == Operation::power);
 
     TreeErr err = {};
     RETURN_IF_FALSE(*node, err);
 
-    // if (IsNodeConst(_R))
-    // {
-    //     Node_t* new_left  = {}; // num - 1
-    //     Node_t* new_right = {}; // ^ ( x num-1 )
+    if (IsNodeConst(_R))
+    {
+        Node_t* new_left  = {}; // *
+        Node_t* new_right = {}; // (x)'
 
-    //     Node_t* new_right_left  = {}; // x
-    //     Node_t* new_right_right = {}; // -
+        Node_t* new_left_left  = {}; // num
+        Node_t* new_left_right = {}; // ^
 
-    //     Node_t* new_right_right_left  = {}; // num
-    //     Node_t* new_right_right_right = {}; // 1
+        Node_t* new_left_right_left  = {}; // x
+        Node_t* new_left_right_right = {}; // -
+        
+        Node_t* new_left_right_right_left  = {}; // num
+        Node_t* new_left_right_right_right = {}; // 1
+    
 
-    //     new_right_right_left = _R;
-    //     _NUM(&new_right_right_right, 1);
+        Node_t* number = _R;
 
-    //     new_right_left = _L;
-    //     _SUB(&new_right_right, new_right_right_left, new_right_right_right);
+        new_left_right_right_left = number;
+        _NUM(&new_left_right_right_right, 1);
 
-    //     TREE_ASSERT(NodeCopy(&new_left, _R));
-    //     _POW(&new_right, new_right_left, new_right_right);
+        new_left_right_left = _L;
+        _SUB(&new_left_right_right, new_left_right_right_left, new_left_right_right_right);
 
-    //     _SET_MUL(*node, new_left, new_right);
 
-    //     return NODE_VERIF(*node, err);
-    // }
+        TREE_ASSERT(NodeCopy(&new_left_left, number));
+        _POW(&new_left_right, new_left_right_left, new_left_right_right);
+
+
+        TREE_ASSERT(NodeCopy(&new_right, _L));
+        TREE_ASSERT(DiffNode(&new_right));
+        _MUL(&new_left, new_left_left, new_left_right);
+
+
+        _SET_MUL(*node, new_left, new_right);
+
+        return NODE_VERIF(*node, err);
+    }
 
     Node_t* new_left  = {}; // ^ f g
     Node_t* new_right = {}; // + * *
@@ -285,11 +300,11 @@ static TreeErr HandleDiffPow(Node_t** node)
     Node_t* new_left_left  = {}; // f nullptr nullptr
     Node_t* new_left_right = {}; // g nullptr nullptr
 
-    Node_t* new_right_left  = {}; // * g' ln
+    Node_t* new_right_left  = {}; // * g' Ln
     Node_t* new_right_right = {}; // * f' /
 
     Node_t* new_right_left_left  = {}; // g'
-    Node_t* new_right_left_right = {}; // ln f       nullptr
+    Node_t* new_right_left_right = {}; // Ln f       nullptr
 
     Node_t* new_right_right_left  = {}; // f'
     Node_t* new_right_right_right = {}; // / g f'
@@ -307,7 +322,7 @@ static TreeErr HandleDiffPow(Node_t** node)
 
     TREE_ASSERT(NodeCopy(&new_right_left_left, _R));
     TREE_ASSERT(DiffNode(&new_right_left_left));
-    _FUNC(&new_right_left_right, Function::ln, new_right_left_right_left);
+    _FUNC(&new_right_left_right, Function::Ln, new_right_left_right_left);
 
     TREE_ASSERT(NodeCopy(&new_right_right_left, _L));
     TREE_ASSERT(DiffNode(&new_right_right_left));
@@ -364,20 +379,20 @@ static TreeErr HandleDiffFunctionHelper(Node_t** node)
 
     switch (function)
     {
-        case Function::sqrt:     TREE_ASSERT(HandleDiffSqrt  (node));                                break;
-        case Function::ln:       TREE_ASSERT(HandleDiffLn    (node));                                break;
-        case Function::sin:      TREE_ASSERT(HandleDiffSin   (node));                                break;
-        case Function::cos:      TREE_ASSERT(HandleDiffCos   (node));                                break;
-        case Function::tg:       TREE_ASSERT(HandleDiffTg    (node));                                break;
-        case Function::ctg:      TREE_ASSERT(HandleDiffCtg   (node));                                break;
-        case Function::sh:       TREE_ASSERT(HandleDiffSh    (node));                                break;
-        case Function::ch:       TREE_ASSERT(HandleDiffCh    (node));                                break;
-        case Function::th:       TREE_ASSERT(HandleDiffTh    (node));                                break;
-        case Function::cth:      TREE_ASSERT(HandleDiffCth   (node));                                break;
-        case Function::arcsin:   TREE_ASSERT(HandleDiffArcsin(node));                                break;
-        case Function::arccos:   TREE_ASSERT(HandleDiffArccos(node));                                break;
-        case Function::arctg:    TREE_ASSERT(HandleDiffArctg (node));                                break;
-        case Function::arcctg:   TREE_ASSERT(HandleDiffArcctg(node));                                break;
+        case Function::Sqrt:     TREE_ASSERT(HandleDiffSqrt  (node));                                break;
+        case Function::Ln:       TREE_ASSERT(HandleDiffLn    (node));                                break;
+        case Function::Sin:      TREE_ASSERT(HandleDiffSin   (node));                                break;
+        case Function::Cos:      TREE_ASSERT(HandleDiffCos   (node));                                break;
+        case Function::Tg:       TREE_ASSERT(HandleDiffTg    (node));                                break;
+        case Function::Ctg:      TREE_ASSERT(HandleDiffCtg   (node));                                break;
+        case Function::Sh:       TREE_ASSERT(HandleDiffSh    (node));                                break;
+        case Function::Ch:       TREE_ASSERT(HandleDiffCh    (node));                                break;
+        case Function::Th:       TREE_ASSERT(HandleDiffTh    (node));                                break;
+        case Function::Cth:      TREE_ASSERT(HandleDiffCth   (node));                                break;
+        case Function::Arcsin:   TREE_ASSERT(HandleDiffArcsin(node));                                break;
+        case Function::Arccos:   TREE_ASSERT(HandleDiffArccos(node));                                break;
+        case Function::Arctg:    TREE_ASSERT(HandleDiffArctg (node));                                break;
+        case Function::Arcctg:   TREE_ASSERT(HandleDiffArcctg(node));                                break;
         case Function::undefined_function: err.err = UNDEFINED_FUNCTION_TYPE;                        break;
         default: assert(0 && "You forgpt about some function.\n");                                   break;
     }
@@ -418,7 +433,7 @@ static TreeErr HandleDiffSqrt(Node_t** node)
     Node_t* new_right = {}; // *
     
     Node_t* new_right_left  = {}; // 2
-    Node_t* new_right_right = {}; // sqrt
+    Node_t* new_right_right = {}; // Sqrt
 
     Node_t* new_right_right_left  = {}; // x
 
@@ -426,7 +441,7 @@ static TreeErr HandleDiffSqrt(Node_t** node)
     new_right_right_left = _L;
 
     _NUM  (&new_right_left,  2);
-    _FUNC (&new_right_right, Function::sqrt, new_right_right_left);
+    _FUNC (&new_right_right, Function::Sqrt, new_right_right_left);
 
     _NUM(&new_left, 1);
     _MUL(&new_right, new_right_left, new_right_right);
@@ -445,7 +460,7 @@ static TreeErr HandleDiffSin(Node_t** node)
 
     TreeErr err = {};
 
-    _SET_FUNC_ONLY(*node, Function::cos);
+    _SET_FUNC_ONLY(*node, Function::Cos);
 
     return NODE_VERIF(*node, err);
 }
@@ -469,7 +484,7 @@ static TreeErr HandleDiffCos(Node_t** node)
 
     new_left_left  = _L;
 
-    _FUNC(&new_left, Function::sin, new_left_left);
+    _FUNC(&new_left, Function::Sin, new_left_left);
 
     _SET_SUB(*node, new_left, new_right);
 
@@ -496,7 +511,7 @@ static TreeErr HandleDiffTg(Node_t** node)
 
     new_right_left_left = _L;
 
-    _FUNC(&new_right_left, Function::cos, new_right_left_left);
+    _FUNC(&new_right_left, Function::Cos, new_right_left_left);
     _NUM(&new_right_right, 2);
 
     _NUM(&new_left, 1);
@@ -530,7 +545,7 @@ static TreeErr HandleDiffCtg(Node_t** node)
     _NUM(&new_left_left_left, 1);
 
     new_right_left_left = _L;
-    _FUNC(&new_right_left, Function::sin, new_right_left_left);
+    _FUNC(&new_right_left, Function::Sin, new_right_left_left);
     _NUM(&new_right_right, 2);
 
     _SUB(&new_left,  new_left_left_left, nullptr);
@@ -550,7 +565,7 @@ static TreeErr HandleDiffSh(Node_t** node)
 
     TreeErr err = {};
 
-    _SET_FUNC_ONLY(*node, Function::ch);
+    _SET_FUNC_ONLY(*node, Function::Ch);
 
     return NODE_VERIF(*node, err);
 }
@@ -564,7 +579,7 @@ static TreeErr HandleDiffCh(Node_t** node)
 
     TreeErr err = {};
 
-    _SET_FUNC_ONLY(*node, Function::sh);
+    _SET_FUNC_ONLY(*node, Function::Sh);
 
     return NODE_VERIF(*node, err);
 }
@@ -589,7 +604,7 @@ static TreeErr HandleDiffTh(Node_t** node)
 
     new_right_left_left = _L;
 
-    _FUNC(&new_right_left, Function::ch, new_right_left_left);
+    _FUNC(&new_right_left, Function::Ch, new_right_left_left);
     _NUM(&new_right_right, 2);
 
     _NUM(&new_left, 1);
@@ -620,7 +635,7 @@ static TreeErr HandleDiffCth(Node_t** node)
 
     new_right_left_left = _L;
 
-    _FUNC(&new_right_left, Function::sh, new_right_left_left);
+    _FUNC(&new_right_left, Function::Sh, new_right_left_left);
     _NUM(&new_right_right, 2);
 
     _NUM(&new_left, 1);
@@ -642,7 +657,7 @@ static TreeErr HandleDiffArcsin(Node_t** node)
     NODE_RETURN_IF_ERR(*node, err);
 
     Node_t* new_left  = {}; // 1
-    Node_t* new_right = {}; // sqrt (  - )
+    Node_t* new_right = {}; // Sqrt (  - )
 
     Node_t* new_right_left = {}; // - ( 1  ^ ) 
 
@@ -662,7 +677,7 @@ static TreeErr HandleDiffArcsin(Node_t** node)
     _SUB(&new_right_left, new_right_left_left, new_right_left_right);
 
     _NUM(&new_left, 1);
-    _FUNC(&new_right, Function::sqrt, new_right_left);
+    _FUNC(&new_right, Function::Sqrt, new_right_left);
 
     _SET_DIV(*node, new_left, new_right);
 
@@ -680,7 +695,7 @@ static TreeErr HandleDiffArccos(Node_t** node)
     NODE_RETURN_IF_ERR(*node, err);
 
     Node_t* new_left  = {}; // - ( 1 )
-    Node_t* new_right = {}; // sqrt (  - )
+    Node_t* new_right = {}; // Sqrt (  - )
 
     Node_t* new_left_left = {}; // 1
 
@@ -703,7 +718,7 @@ static TreeErr HandleDiffArccos(Node_t** node)
     _SUB(&new_right_left, new_right_left_left, new_right_left_right);
 
     _SUB(&new_left, new_left_left, nullptr);
-    _FUNC(&new_right, Function::sqrt, new_right_left);
+    _FUNC(&new_right, Function::Sqrt, new_right_left);
 
     _SET_DIV(*node, new_left, new_right);
 

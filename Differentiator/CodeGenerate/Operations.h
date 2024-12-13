@@ -3,3 +3,7 @@
 #endif
 
 
+GENERATE_OPERATION_CMD(plus, 
+{
+    return 
+})

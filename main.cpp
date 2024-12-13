@@ -11,22 +11,25 @@ int main()
 {
     Tree_t tree = {};
 
-    printf("XUI = awenckjew\n");
-
-    const char* input = "(2*x)^2$";
+    const char* input = "arccos(x^2)$";
 
     TREE_ASSERT(TreeCtor(&tree, input));
     TREE_GRAPHIC_DUMP(tree.root);
 
-    TREE_ASSERT(Diff(&tree));
-    TREE_GRAPHIC_DUMP(tree.root) ;
-
-    TREE_ASSERT(SimplifyTree(&tree));
-    TREE_GRAPHIC_DUMP(tree.root);
-
-    // TREE_ASSERT(CalcTree(&tree, 3));
+    // TREE_ASSERT(Diff(&tree));
     // TREE_GRAPHIC_DUMP(tree.root);
 
+    // TREE_ASSERT(SimplifyTree(&tree));
+    // TREE_GRAPHIC_DUMP(tree.root);
+
+    Tree_t taylor = {};
+    TREE_ASSERT(Taylor(&tree, &taylor, 6));
+    TREE_GRAPHIC_DUMP(taylor.root);
+
+    TREE_ASSERT(SimplifyTree(&taylor));
+    TREE_GRAPHIC_DUMP(taylor.root);
+
+    TREE_ASSERT(TreeDtor(&taylor));
     TREE_ASSERT(TreeDtor(&tree));
 
     return EXIT_SUCCESS;

@@ -65,20 +65,20 @@ enum Operation
 enum Function
 {
     undefined_function,
-    sqrt,
-    ln,
-    sin,
-    cos,
-    tg,
-    ctg,
-    arcsin,
-    arccos,
-    arctg,
-    arcctg,
-    sh,
-    ch,
-    th,
-    cth,
+    Sqrt,
+    Ln,
+    Sin,
+    Cos,
+    Tg,
+    Ctg,
+    Arcsin,
+    Arccos,
+    Arctg,
+    Arcctg,
+    Sh,
+    Ch,
+    Th,
+    Cth,
 };
 
 
@@ -91,7 +91,7 @@ enum Variable
 
 
 
-typedef int Number;
+typedef double Number;
 
 
 union NodeData_t
@@ -127,15 +127,15 @@ TreeErr NodeDtor               (Node_t*  node);
 TreeErr NodeAndUnderTreeDtor   (Node_t* node);
 
 TreeErr NodeCopy               (Node_t** copy, const Node_t* node);
+TreeErr NodeSetCopy            (Node_t*  copy, const Node_t* node);
 TreeErr SetNode                (Node_t*  node, NodeArgType type, NodeData_t data, Node_t* left, Node_t* right);
-TreeErr NodeSetCopy            (Node_t* copy, const Node_t* node);
 TreeErr SwapNode               (Node_t** node1, Node_t** node2);
 
 TreeErr TreeVerif              (const Tree_t* tree, TreeErr* Err, const char* file, const int line, const char* func);
 TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* file, const int line, const char* func);
 
 
-#define FREE(ptr) free((char*)ptr); ptr = nullptr
+#define FREE(ptr) free((char*)(ptr)); (ptr) = nullptr
 
 #define _NUM(  node, val                   ) do { NodeData_t data = {.num  = val};                 TREE_ASSERT(NodeCtor(node, NodeArgType::number,    data,  nullptr,     nullptr)); }       while(0)
 #define _FUNC( node, val, left             ) do { NodeData_t data = {.func = val};                 TREE_ASSERT(NodeCtor(node, NodeArgType::function,  data,  left,        nullptr)); }       while(0)
@@ -228,20 +228,20 @@ struct DefaultFunction
 
 static DefaultFunction DefaultFunctions[]
 {
-    {"sqrt"  , Function::sqrt  },
-    {"ln"    , Function::ln    },
-    {"sin"   , Function::sin   },
-    {"cos"   , Function::cos   },
-    {"tg"    , Function::tg    },
-    {"ctg"   , Function::ctg   },
-    {"sh"    , Function::sh    },
-    {"ch"    , Function::ch    },
-    {"th"    , Function::th    },
-    {"cth"   , Function::cth   },
-    {"arcsin", Function::arcsin},
-    {"arccos", Function::arccos},
-    {"arctg" , Function::arctg },
-    {"arcctg", Function::arcctg},
+    {"sqrt"  , Function::Sqrt  },
+    {"ln"    , Function::Ln    },
+    {"sin"   , Function::Sin   },
+    {"cos"   , Function::Cos   },
+    {"tg"    , Function::Tg    },
+    {"ctg"   , Function::Ctg   },
+    {"sh"    , Function::Sh    },
+    {"ch"    , Function::Ch    },
+    {"th"    , Function::Th    },
+    {"cth"   , Function::Cth   },
+    {"arcsin", Function::Arcsin},
+    {"arccos", Function::Arccos},
+    {"arctg" , Function::Arctg },
+    {"arcctg", Function::Arcctg},
 };
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
