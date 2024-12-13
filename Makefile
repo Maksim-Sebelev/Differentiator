@@ -4,7 +4,7 @@ CFLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loo
 
 SOURCES = main.cpp Differentiator/Differentiator.cpp Tree/Tree.cpp Common/GlobalInclude.cpp \
 		  Tree/TreeDump.cpp Differentiator/SimplifyTree.cpp Differentiator/Taylor.cpp 		 \
-		  Tree/ReadTree.cpp Differentiator/MathFunctions.cpp   	 							  \
+		  Tree/ReadTree.cpp Differentiator/MathFunctions.cpp 								  \
 
 HEADERS = $(SOURCES:.cpp=.h)
 OBJECTS = $(SOURCES:.cpp=.o)
@@ -33,21 +33,6 @@ clean.graphic:
 	rm -rf *.dot
 
 
-clean.dot.only:
-	rm -rf *.dot
-
-
-clean.tex:
-	rm -rf *.aux
-	rm -rf *.log
-	rm -rf *.log
-	rm -rf *.tex
-	rm -rf *.fls
-	rm -rf *.gz
-	rm -rf *.pdf
-
-
 run:
 	make clean.graphic
-	make clean.tex
 	./$(TARGET)

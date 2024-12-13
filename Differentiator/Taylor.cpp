@@ -33,7 +33,6 @@ TreeErr Taylor(const Tree_t* tree, Tree_t* taylor, size_t degree)
     {
         TREE_ASSERT(Diff(&treeCopy));
         TREE_ASSERT(SimplifyTree(&treeCopy));
-        TREE_GRAPHIC_DUMP(treeCopy.root);
 
         Node_t* node = {};
         TREE_ASSERT(CreateNewNode(&treeCopy, &node, degree_i));
@@ -51,7 +50,6 @@ TreeErr Taylor(const Tree_t* tree, Tree_t* taylor, size_t degree)
 
 static TreeErr CreateNewNode(const Tree_t* tree, Node_t** node, size_t degree)
 {
-    COLOR_PRINT(GREEN, "1\n");
     assert(tree);
     assert(tree->root);
     assert(node);
@@ -86,8 +84,6 @@ static TreeErr CreateNewNode(const Tree_t* tree, Node_t** node, size_t degree)
     _MUL(&new_right, new_right_left, new_right_right);
 
     _ADD(node, new_left, new_right);
-
-    COLOR_PRINT(RED, "2\n\n");
 
 
     return NODE_VERIF(*node, err);
