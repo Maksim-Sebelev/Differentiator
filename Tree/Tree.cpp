@@ -32,6 +32,7 @@ TreeErr TreeCtor(Tree_t* tree, const char* input)
 
     size_t tokenQuant = 0;
     Token_t* token = ReadInputStr(input, &tokenQuant);
+
     TOKEN_GRAPHIC_DUMP(token, tokenQuant);
 
     tree->root = GetTree(token, input);
@@ -406,20 +407,20 @@ static bool IsNodeTypeFunctionDataCorrect(const Node_t* node)
 
     switch (fucntion)
     {
-        case Function::sqrt:
-        case Function::ln:
-        case Function::sin:
-        case Function::cos:
-        case Function::tg:
-        case Function::ctg:
-        case Function::sh:
-        case Function::ch:
-        case Function::th:
-        case Function::cth:
-        case Function::arcsin:
-        case Function::arccos:
-        case Function::arctg:
-        case Function::arcctg: break;
+        case Function::Sqrt:
+        case Function::Ln:
+        case Function::Sin:
+        case Function::Cos:
+        case Function::Tg:
+        case Function::Ctg:
+        case Function::Sh:
+        case Function::Ch:
+        case Function::Th:
+        case Function::Cth:
+        case Function::Arcsin:
+        case Function::Arccos:
+        case Function::Arctg:
+        case Function::Arcctg: break;
         case Function::undefined_function:
         default: return false;
     }

@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include "TreeDump.h"
 #include "Tree.h"
 #include "ReadTree.h"
+#include "../Differentiator/MathFunctions.h"
 #include "../Common/GlobalInclude.h"
 
 
@@ -23,16 +25,18 @@ static void DotEnd                (FILE* dotFile);
 static void DotCreateAllNodes     (FILE* dotFile, const Node_t* node);
 static void DotCreateEdges        (FILE* dotFile, const Node_t* node);
 static void DotCreateEdgesHelper  (FILE* dotFile, const Node_t* node);
-static void DotCreateDumpPlace    (FILE* dotFile, const char* file, const int line, const char* func);
-static void TreeDumpHelper     (const Node_t* node, const char* dotFileName, const char* file, const int line, const char* func);
+static void DotCreateDumpPlace    (FILE* dotFile,                               const char* file, const int line, const char* func);
+static void TreeDumpHelper        (const Node_t* node, const char* dotFileName, const char* file, const int line, const char* func);
 
 static const char* GetNodeColor       (const Node_t* node);
 static const char* GetNodeTypeInStr   (const Node_t* node);
-static const char* GetNodeDataInStr    (const Node_t* node);
+static const char* GetNodeDataInStr   (const Node_t* node);
 static const char* GetVariableInStr   (Variable var);
 static const char* GetOperationInStr  (Operation oper);
 static const char* GetFuncInStr       (Function func);
 
+
+static const double eps = 1e-50;
 
 //=============================== Token Dump =============================================================================================================================================
 
@@ -52,7 +56,17 @@ void TokenTextDump(const Token_t* tokenArr, size_t tokenNum, const char* file, c
 
     if (tokenArr[tokenNum].type == TokenType::Number_t)
     {
-        COLOR_PRINT(CYAN, "data: '%d'\n", tokenArr[tokenNum].data.number);
+        Number number = tokenArr[tokenNum].data.number;
+
+        if (IsDoubleEqual(number, floor(number), eps))
+        {
+            COLOR_PRINT(CYAN, "data: '%d'\n", (int) number);
+        }
+
+        else
+        {
+            COLOR_PRINT(CYAN, "data: '%lf'\n", tokenArr[tokenNum].data.number);
+        }
     }
 
     else
@@ -169,7 +183,8 @@ static void CreateToken(const Token_t* token, size_t pointer, FILE* dotFile)
 
     if (type == TokenType::Number_t)
     {
-        fprintf(dotFile, "%d | ", token->data.number);
+        Number number = token->data.number;
+        fprintf(dotFile, " %lf | ", number);
     }
 
     else
@@ -179,7 +194,7 @@ static void CreateToken(const Token_t* token, size_t pointer, FILE* dotFile)
         fprintf(dotFile, "%s | ", tokenData);
     }
 
-    fprintf(dotFile, " token[%lu] | ", pointer);
+    fprintf(dotFile, " token[%lu] | ", pointer + 1);
     fprintf(dotFile, " input::%lu::%lu } \", ", token->place.line, token->place.placeInLine);
     fprintf(dotFile, "color = \"#777777\"];\n");
 
@@ -327,7 +342,7 @@ void NodeTextDump(const Node_t* node, const char* file, const int line, const ch
 
     if (type == NodeArgType::number)
     {
-        COLOR_PRINT(CYAN, "data = '%d'\n", node->data.num);
+        COLOR_PRINT(CYAN, "data = '%lf'\n", node->data.num);
     }
 
     else
@@ -420,16 +435,30 @@ static void DotCreateAllNodes(FILE* dotFile, const Node_t* node)
 
     NodeArgType type = node->type;
 
+    fprintf(dotFile, "label = \"");
+
     if (type == NodeArgType::number)
     {
-        Number num = node->data.num;
-        fprintf(dotFile, "label =\"%d\", ", num);
+        
+        Number number = node->data.num;
+
+        if (IsDoubleEqual(number, floor(number), eps))
+        {
+            fprintf(dotFile, "%d", (int) number);
+        }
+        else
+        {
+            fprintf(dotFile, "%lf", number);
+        }
+        
     }
     else
     {
         const char* arg = GetNodeDataInStr(node);
-        fprintf(dotFile, "label =\"%s\", ", arg);
+        fprintf(dotFile, "%s", arg);
     }
+
+    fprintf(dotFile, "\", ");
 
     fprintf(dotFile, "color = \"#777777\"];\n");
 

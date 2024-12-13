@@ -3,6 +3,6 @@
 
 #include "../Tree/Tree.h"
 
-TreeErr CalcTree(Tree_t* tree, Number valX);
+TreeErr Taylor(const Tree_t* tree, Tree_t* taylor, size_t degree);
 
 #endif
