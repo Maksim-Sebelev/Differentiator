@@ -8,20 +8,19 @@
 #include "../Common/GlobalInclude.h"
 
 
-static bool         IsError                        (const TreeErr* err);
-static bool         HasntNumChild                  (const Node_t* node);
-static bool         HasntVarChild                  (const Node_t* node);
-static bool         HasOperationChildren           (const Node_t* node);
-static bool         HasFuncLeftChildOnly           (const Node_t* node);
-
-static bool         IsNodeTypeOperationDataCorrect (const Node_t* node);
-static bool         IsNodeTypeFunctionDataCorrect  (const Node_t* node);
-static bool         IsNodeVariableTypeUndef        (const Node_t* node);
+static bool IsError                        (const TreeErr* err);
+static bool HasntNumChild                  (const Node_t* node);
+static bool HasntVarChild                  (const Node_t* node);
+static bool HasOperationChildren           (const Node_t* node);
+static bool HasFuncLeftChildOnly           (const Node_t* node);
+static bool IsNodeTypeOperationDataCorrect (const Node_t* node);
+static bool IsNodeTypeFunctionDataCorrect  (const Node_t* node);
+static bool IsNodeVariableTypeUndef        (const Node_t* node);
 
 //======================================================================================================================================================================
 
-static void         PrintError                 (const TreeErr* err);
-static TreeErr      AllNodeVerif               (const Node_t* node, size_t* treeSize);
+static void    PrintError                  (const TreeErr* err);
+static TreeErr AllNodeVerif                (const Node_t* node, size_t* treeSize);
 
 
 //============================== Tree functions ============================================================================================================================

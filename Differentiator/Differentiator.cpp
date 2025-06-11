@@ -206,7 +206,6 @@ static TreeErr HandleDiffDiv(Node_t** node)
     TreeErr err = {};
     NODE_RETURN_IF_ERR(*node, err);
 
-
     Node_t* diff_left  = {};
     Node_t* diff_right = {};
     
@@ -226,7 +225,6 @@ static TreeErr HandleDiffDiv(Node_t** node)
     TREE_ASSERT(DiffNode(&diff_left));
     TREE_ASSERT(DiffNode(&diff_right));
     
-
     TREE_ASSERT(NodeCopy(&new_right_left, _R));
     _NUM                (&new_right_right, 2);
 
@@ -379,22 +377,22 @@ static TreeErr HandleDiffFunctionHelper(Node_t** node)
 
     switch (function)
     {
-        case Function::Sqrt:     TREE_ASSERT(HandleDiffSqrt  (node));                                break;
-        case Function::Ln:       TREE_ASSERT(HandleDiffLn    (node));                                break;
-        case Function::Sin:      TREE_ASSERT(HandleDiffSin   (node));                                break;
-        case Function::Cos:      TREE_ASSERT(HandleDiffCos   (node));                                break;
-        case Function::Tg:       TREE_ASSERT(HandleDiffTg    (node));                                break;
-        case Function::Ctg:      TREE_ASSERT(HandleDiffCtg   (node));                                break;
-        case Function::Sh:       TREE_ASSERT(HandleDiffSh    (node));                                break;
-        case Function::Ch:       TREE_ASSERT(HandleDiffCh    (node));                                break;
-        case Function::Th:       TREE_ASSERT(HandleDiffTh    (node));                                break;
-        case Function::Cth:      TREE_ASSERT(HandleDiffCth   (node));                                break;
-        case Function::Arcsin:   TREE_ASSERT(HandleDiffArcsin(node));                                break;
-        case Function::Arccos:   TREE_ASSERT(HandleDiffArccos(node));                                break;
-        case Function::Arctg:    TREE_ASSERT(HandleDiffArctg (node));                                break;
-        case Function::Arcctg:   TREE_ASSERT(HandleDiffArcctg(node));                                break;
-        case Function::undefined_function: err.err = UNDEFINED_FUNCTION_TYPE;                        break;
-        default: assert(0 && "You forgpt about some function.\n");                                   break;
+        case Function::Sqrt:     TREE_ASSERT(HandleDiffSqrt   (node));         break;
+        case Function::Ln:       TREE_ASSERT(HandleDiffLn     (node));         break;
+        case Function::Sin:      TREE_ASSERT(HandleDiffSin    (node));         break;
+        case Function::Cos:      TREE_ASSERT(HandleDiffCos    (node));         break;
+        case Function::Tg:       TREE_ASSERT(HandleDiffTg     (node));         break;
+        case Function::Ctg:      TREE_ASSERT(HandleDiffCtg    (node));         break;
+        case Function::Sh:       TREE_ASSERT(HandleDiffSh     (node));         break;
+        case Function::Ch:       TREE_ASSERT(HandleDiffCh     (node));         break;
+        case Function::Th:       TREE_ASSERT(HandleDiffTh     (node));         break;
+        case Function::Cth:      TREE_ASSERT(HandleDiffCth    (node));         break;
+        case Function::Arcsin:   TREE_ASSERT(HandleDiffArcsin (node));         break;
+        case Function::Arccos:   TREE_ASSERT(HandleDiffArccos (node));         break;
+        case Function::Arctg:    TREE_ASSERT(HandleDiffArctg  (node));         break;
+        case Function::Arcctg:   TREE_ASSERT(HandleDiffArcctg (node));         break;
+        case Function::undefined_function: err.err = UNDEFINED_FUNCTION_TYPE;  break;
+        default: assert(0 && "You forgpt about some function.\n");             break;
     }
 
     return NODE_VERIF(*node, err);
@@ -805,19 +803,13 @@ static bool IsNodeConst(const Node_t* node)
 
     if (node->type == NodeArgType::variable) return false;
 
-    if (node->left)
-    {
-        RETURN_IF_FALSE(IsNodeConst(node->left), false);
-    }
-
-    if (node->right)
-    {
-        RETURN_IF_FALSE(IsNodeConst(node->right), false);
-    }
+    if (node->left ) RETURN_IF_FALSE(IsNodeConst(node->left ), false);
+    if (node->right) RETURN_IF_FALSE(IsNodeConst(node->right), false);
 
     return true;
 }
 
+//--------------------------------------------------------------------------------------------------------------------------------------
 
 #undef _L
 #undef _R

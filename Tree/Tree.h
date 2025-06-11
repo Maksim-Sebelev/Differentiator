@@ -147,7 +147,7 @@ TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* fi
 #define _SET_VAR(  node, val               ) do { NodeData_t data = {.var  = val};                 TREE_ASSERT(SetNode (node, NodeArgType::variable,  data, nullptr,      nullptr)); }       while(0)
 #define _SET_OPER( node, val, left, right  ) do { NodeData_t data = {.oper = val};                 TREE_ASSERT(SetNode (node, NodeArgType::operation, data, left,         right));   }       while(0)
 
-#define _SET_FUNC_ONLY( node, val          ) do { NodeData_t data      = {.func = val};            TREE_ASSERT(SetNode (node, NodeArgType::function,  data, (node)->left, (node)->right)); } while(0)
+#define _SET_FUNC_ONLY( node, val          ) do { NodeData_t data = {.func = val};                 TREE_ASSERT(SetNode (node, NodeArgType::function,  data, (node)->left, (node)->right)); } while(0)
 #define _SET_OPER_ONLY( node, val          ) do { NodeData_t data = {.oper = val};                 TREE_ASSERT(SetNode (node, NodeArgType::operation, data, (node)->left, (node)->right)); } while(0)
 
 #define _MUL( node, left, right            ) do { NodeData_t data = {.oper = Operation::mul};      TREE_ASSERT(NodeCtor(node, NodeArgType::operation, data, left,         right)); }         while(0)
@@ -170,11 +170,12 @@ TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* fi
 #define _SET_SUB_ONLY( node                ) do { NodeData_t data = {.oper = minus};               TREE_ASSERT(SetNode (node, NodeArgType::operation,  data, (node)->left, (node)->right)); } while(0)
 #define _SET_POW_ONLY( node                ) do { NodeData_t data = {.oper = power};               TREE_ASSERT(SetNode (node, NodeArgType::operation,  data, (node)->left, (node)->right)); } while(0)
 
-;
+
 #define TREE_VERIF(TreePtr, Err) TreeVerif(TreePtr, &Err, __FILE__, __LINE__, __func__)
 
 #define NODE_VERIF(Node, Err)    NodeVerif(Node,    &Err, __FILE__, __LINE__, __func__)
 
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #define TREE_RETURN_IF_ERR(TreePtr, Err) do                          \
 {                                                                     \
@@ -186,6 +187,7 @@ TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* fi
     }                                                                       \
 } while (0)                                                                  \
 
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #define NODE_RETURN_IF_ERR(Node, Err) do                             \
 {                                                                     \
@@ -197,7 +199,7 @@ TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* fi
     }                                                                       \
 } while (0)                                                                  \
 
-
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #define TREE_ASSERT(Err) do                                          \
 {                                                                     \
@@ -213,10 +215,7 @@ TreeErr NodeVerif              (const Node_t* node, TreeErr* err, const char* fi
 
 void TreeAssertPrint(TreeErr* Err, const char* File, int Line, const char* Func);
 
-
-
-
-
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 struct DefaultFunction
 {

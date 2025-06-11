@@ -13,7 +13,7 @@ static TreeErr SimplifyOperation                                   (Node_t* node
 
 static TreeErr SimplifyNodeTypeSubWith1ChildTypeNum                (Node_t* node);
 
-static TreeErr SimplifyNodeTypeOpearationWith2ChildrenTypeNum      (Node_t* node);
+static TreeErr SimplifyNodeTypeOperationWith2ChildrenTypeNum       (Node_t* node);
 static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal0       (Node_t* node);
 
 static TreeErr SimplifyLeftChildTypeNumVal0                        (Node_t* node);
@@ -22,7 +22,7 @@ static TreeErr SimplifyRightChildTypeNumVal0                       (Node_t* node
 static TreeErr ReamakeNodeToTypeNumVal0                            (Node_t* node);
 static TreeErr ReamakeNodeToTypeNumVal1                            (Node_t* node);
 
-static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal1   (Node_t* node);
+static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal1       (Node_t* node);
 
 static TreeErr SimplifyNodeTypeOperationWithLeftChildTypeNumVal1   (Node_t* node);
 static TreeErr SimplifyNodeTypeOperationWithRightChildTypeNumVal1  (Node_t* node);
@@ -48,7 +48,7 @@ static bool    HasNode1ChildTypeNumVal1                            (const Node_t
 
 static Number  MakeArithmeticOperation             (Number firstOpearnd, Number secondOperand, Operation Operator);
 
-static const Number eps = 0.0000000001;
+static const Number eps = 1e-50;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -73,27 +73,18 @@ static TreeErr SimplifyTreeHelper(Node_t* node)
     NODE_RETURN_IF_ERR(node, err);
 
     if (node->left)
-    {
         TREE_ASSERT(SimplifyTreeHelper(node->left));
-    }
 
     if (node->right)
-    {
         TREE_ASSERT(SimplifyTreeHelper(node->right));
-    }
-
 
     NodeArgType type = node->type;
 
     if (type == NodeArgType::operation)
-    {
         TREE_ASSERT(SimplifyOperation(node));
-    }
 
     else if (type == NodeArgType::function)
-    {
         TREE_ASSERT(SimplifyFunction(node));    
-    }
 
     return NODE_VERIF(node, err);
 }
@@ -179,10 +170,11 @@ static double (*GetMathFunction(Function function)) (double)
         case Function::Arctg:  return atan;
         case Function::Arcctg: return actg;
         case Function::undefined_function:
+
         default: assert(0 && "undefined function type"); break;
     }
 
-    assert(0 && "we must be here");
+    assert(0 && "we must not be here");
     return nullptr;
 }
 
@@ -196,24 +188,16 @@ static TreeErr SimplifyOperation(Node_t* node)
     NODE_RETURN_IF_ERR(node, err);
 
     if (IsNodeMinusWith1NumChild(node))
-    {
         TREE_ASSERT(SimplifyNodeTypeSubWith1ChildTypeNum(node));
-    }
 
     else if (HasNode2ChilrenTypesNum(node))
-    {
-        TREE_ASSERT(SimplifyNodeTypeOpearationWith2ChildrenTypeNum(node));
-    }
+        TREE_ASSERT(SimplifyNodeTypeOperationWith2ChildrenTypeNum(node));
 
     else if (HasNodeChildTypeNumVal0(node))
-    {
         TREE_ASSERT(SimplifyNodeTypeOperationWithChildTypeNumVal0(node));
-    }
 
     else if (HasNode1ChildTypeNumVal1(node))
-    {
         TREE_ASSERT(SimplifyNodeTypeOperationWithChildTypeNumVal1(node));
-    }
 
     return NODE_VERIF(node, err);
 }
@@ -245,7 +229,7 @@ static TreeErr SimplifyNodeTypeSubWith1ChildTypeNum(Node_t* node)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static TreeErr SimplifyNodeTypeOpearationWith2ChildrenTypeNum(Node_t* node)
+static TreeErr SimplifyNodeTypeOperationWith2ChildrenTypeNum(Node_t* node)
 {
     assert(node);
     assert(node->left);
@@ -257,9 +241,7 @@ static TreeErr SimplifyNodeTypeOpearationWith2ChildrenTypeNum(Node_t* node)
     TreeErr err = {};
 
     if (!IsSomeToSimplifyInNodeTypeOperation(node))
-    {
         return NODE_VERIF(node, err);
-    }
 
     Operation operation = node->data.oper;
 
@@ -289,14 +271,10 @@ static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal0(Node_t* node)
     TreeErr err = {};
 
     if (IsNodeTypeNumAndVal0(node->left))
-    {
         TREE_ASSERT(SimplifyLeftChildTypeNumVal0(node));
-    }
 
     else if (IsNodeTypeNumAndVal0(node->right))
-    {
         TREE_ASSERT(SimplifyRightChildTypeNumVal0(node));
-    }
 
     return NODE_VERIF(node, err);    
 }
@@ -314,14 +292,10 @@ static TreeErr SimplifyNodeTypeOperationWithChildTypeNumVal1(Node_t* node)
     TreeErr err = {};
 
     if (IsTypeNum(node->left) && (IsDoubleEqual(node->left->data.num, 1, eps)))
-    {
         TREE_ASSERT(SimplifyNodeTypeOperationWithLeftChildTypeNumVal1(node));
-    }
 
     else if (IsTypeNum(node->right) && (IsDoubleEqual(node->right->data.num, 1, eps)))
-    {
         TREE_ASSERT(SimplifyNodeTypeOperationWithRightChildTypeNumVal1(node));
-    }
 
     return NODE_VERIF(node, err); 
 }
@@ -514,7 +488,7 @@ static TreeErr ReamakeNodeToTypeNumVal1(Node_t* node)
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Number  MakeArithmeticOperation(Number firstOpearnd, Number secondOperand, Operation Operator)
+static Number MakeArithmeticOperation(Number firstOpearnd, Number secondOperand, Operation Operator)
 {
     switch (Operator)
     {
@@ -572,7 +546,9 @@ static bool HasNode2ChilrenTypesNum(const Node_t* node)
 {
     assert(node);
 
-    return (node->left) && (node->right) && (IsTypeNum(node->left) && IsTypeNum(node->right));
+    return (node->left)  &&
+           (node->right) && 
+           (IsTypeNum(node->left) && IsTypeNum(node->right));
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -589,7 +565,8 @@ static bool HasNodeChildTypeNumVal0(const Node_t* node)
 {
     assert(node);
 
-    return ((node->left && IsNodeTypeNumAndVal0(node->left)) || (node->right && IsNodeTypeNumAndVal0(node->right)));
+    return ((node->left  && IsNodeTypeNumAndVal0(node->left )) || 
+            (node->right && IsNodeTypeNumAndVal0(node->right)) );
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -599,11 +576,9 @@ static bool IsNodeMinusWith1NumChild(const Node_t* node)
     assert(node);
     assert(node->left);
     
-    bool flag1 = (node->data.oper == Operation::minus);
-    bool flag2 = (IsTypeNum(node->left));
-    bool flag3 = (!node->right);
-
-    return (flag1 && flag2 && flag3);
+    return ((node->data.oper == Operation::minus) && 
+            IsTypeNum(node->left)                &&
+            !node->right);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -612,23 +587,19 @@ static bool HasNode1ChildTypeNumVal1(const Node_t* node)
 {
     assert(node);
 
-    bool flag1 = false;
-    bool flag2 = false;
-
     if (node->left && node->left->type == NodeArgType::number)
     {
         Number number = node->left->data.num;
-        if (IsDoubleEqual(number, 1, eps)) flag1 = true;
+        if (IsDoubleEqual(number, 1, eps)) return true;
     }
 
     if (node->right && node->right->type == NodeArgType::number)
     {
         Number number = node->right->data.num;
-        if (IsDoubleEqual(number, 1, eps)) flag2 = true;
+        if (IsDoubleEqual(number, 1, eps)) return true;
     }
 
-    return flag1 || flag2;
-
+    return false;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

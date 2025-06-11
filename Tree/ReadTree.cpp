@@ -51,7 +51,7 @@ static Operation GetOperation     (const char* operation, Pointers* pointer, siz
 static Function  GetFunction      (const char* word, size_t wordSize);
 static Variable  GetVariable      (const char* word, size_t wordSize);
 
-//=============================== Tokens (Read Tree) End =================tt======================================================================================================================================================================
+//=============================== Tokens (Read Tree) End =======================================================================================================================================================================================
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ static void SyntaxError(size_t errLine, size_t errLinePos, const char* input, co
 
 
     COLOR_PRINT(VIOLET, "\nabort() in 3, 2, 1...\n");
-    exit(0);
+    exit(-1);
 
     return;
 }
@@ -714,19 +714,13 @@ static Node_t* GetMulDiv(const Token_t* token, size_t* tp, const char* input)
         Node_t* new_node = {};
     
         if (operation == Operation::mul)
-        {
             _MUL(&new_node, node, node2);
-        }
 
         else if (operation == Operation::dive)
-        {
             _DIV(&new_node, node, node2);
-        }
 
         else
-        {
             assert(0 && "not a */ operation in get mul div");
-        }
 
         TREE_ASSERT(SwapNode(&node, &new_node));
     }
@@ -743,13 +737,13 @@ static Node_t* GetBracket(const Token_t* token, size_t* tp, const char* input)
 
     if (IsTokenLeftBracket(token, tp))
     {
-        (*tp)++;  
+        (*tp)++;
         Node_t* node = GetAddSub(token, tp, input);
     
         if (!IsTokenRightBracket(token, tp)) 
             SYNTAX_ERR_FOR_TOKEN(token[*tp], input, "expected ')'");
 
-        (*tp)++;  
+        (*tp)++;
         return node;
     }
 

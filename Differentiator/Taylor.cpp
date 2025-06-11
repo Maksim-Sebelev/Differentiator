@@ -10,7 +10,7 @@
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 static TreeErr CreateNewNode       (const Tree_t* tree, Node_t** node, size_t degree);
-static Number  GetTaylorCoeff      (const Tree_t* tree);
+// static Number  GetTaylorCoeff      (const Tree_t* tree);
 static TreeErr SetXnodes           (Node_t* node, Number valX);
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -28,6 +28,9 @@ TreeErr Taylor(const Tree_t* tree, Tree_t* taylor, size_t degree)
     Number coeff = GetTaylorCoeff(&treeCopy);
 
     _NUM(&taylor->root, coeff);
+
+    TREE_GRAPHIC_DUMP(treeCopy.root);
+
 
     for (size_t degree_i = 1; degree_i <= degree; degree_i++)
     {
@@ -91,7 +94,7 @@ static TreeErr CreateNewNode(const Tree_t* tree, Node_t** node, size_t degree)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-static Number GetTaylorCoeff(const Tree_t* tree)
+Number GetTaylorCoeff(const Tree_t* tree)
 {
     assert(tree);
 

@@ -4,5 +4,6 @@
 #include "../Tree/Tree.h"
 
 TreeErr Taylor(const Tree_t* tree, Tree_t* taylor, size_t degree);
+Number GetTaylorCoeff(const Tree_t* tree);
 
 #endif

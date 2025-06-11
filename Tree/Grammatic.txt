@@ -6,12 +6,12 @@
 
 // Minus   ::= '-' MulDiv
 
-// Ln      :: 'ln' '(' AddSub ')'
-// Sin     :: 'sin' '(' MulDiv ')'
-// Cos     :: 'cos' '(' MulDiv ')'
+// Ln      :: 'ln'  '(' AddSub ')'
+// Sin     :: 'sin' '(' AddSub ')'
+// Cos     :: 'cos' '(' AddSub ')'
 // ...
 // Arccos  ::= 'arccos' '(' MulDiv ')'
 
 // Bracket ::= '(' Func ')' | Var | Number
 // Var     ::= 'x'
-// Nunmber ::= ['0' - '9']+
+// Number ::= ['0' - '9']+
